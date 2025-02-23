@@ -147,6 +147,7 @@ else ifneq (,$(findstring msvc,$(platform)))
    CC = cl.exe
    LDFLAGS += -DLL
    OBJ_EXT = obj
+   ODIN_TARGET = freestanding_amd64_win64
    ODIN_UNPACK = powershell -command "Expand-Archive -Force odin.zip ."
 
    PATH := $(shell IFS=$$'\n'; cygpath "$(VS100COMNTOOLS)../../VC/bin/amd64"):$(PATH)
