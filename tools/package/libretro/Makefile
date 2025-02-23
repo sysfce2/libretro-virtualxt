@@ -94,13 +94,11 @@ else ifneq (,$(findstring osx,$(platform)))
 		TARGET_PLATFORM = $(LIBRETRO_APPLE_PLATFORM)
    endif
 
+   ODIN_FLAGS += -minimum-os-version:13.0
    ifneq (,$(findstring arm,$(TARGET_PLATFORM)))
 		ODIN_TARGET = darwin_arm64
-		ODIN_FLAGS += -minimum-os-version:13.0
    else
-   		# TODO: Not sure what the issue is here? Bad OS version perhaps?
-		#ODIN_TARGET = darwin_amd64
-		ODIN_TARGET = freestanding_amd64_sysv
+		ODIN_TARGET = darwin_amd64
    endif
 else ifneq (,$(findstring ios,$(platform)))
    EXT ?= dylib
@@ -135,6 +133,7 @@ else ifneq (,$(findstring tvos,$(platform)))
    fpic := -fPIC
    SHARED := -dynamiclib
    MIN_VERSION := -mappletvos-version-min=9.0
+   ODIN_FLAGS += -minimum-os-version:9.0
 
    ifeq ($(TVOSSDK),)
       TVOSSDK := $(shell xcodebuild -version -sdk appletvos Path)
@@ -142,7 +141,7 @@ else ifneq (,$(findstring tvos,$(platform)))
 
    SHARED += -arch arm64 $(MIN_VERSION) -isysroot $(TVOSSDK)
    CC = cc -arch arm64 $(MIN_VERSION) -isysroot $(TVOSSDK)
-   ODIN_TARGET = freestanding_arm64
+   ODIN_TARGET = darwin_arm64
 else ifneq (,$(findstring msvc,$(platform)))
    CC = cl.exe
    LDFLAGS += -DLL
