@@ -38,10 +38,6 @@ include:
   - project: 'libretro-infrastructure/ci-templates'
     file: '/ios-arm64.yml'
 
-  # tvOS
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/tvos-arm64.yml'
-
 # Stages for building
 stages:
   - build-prepare
@@ -142,14 +138,4 @@ libretro-build-ios-arm64:
     - release
   extends:
     - .libretro-ios-arm64-make-default
-    - .core-defs
-
-# tvOS
-libretro-build-tvos-arm64:
-  only:
-    - develop
-    - edge
-    - release
-  extends:
-    - .libretro-tvos-arm64-make-default
     - .core-defs

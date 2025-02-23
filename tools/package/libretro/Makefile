@@ -163,7 +163,7 @@ else ifneq (,$(findstring msvc,$(platform)))
    	 AR = lib.exe
    else
      TARGET := $(TARGET_NAME)_libretro.dll
-     LDFLAGS += kernel32.lib
+     LDFLAGS += kernel32.lib msvcrt.lib
      LD = link.exe
    endif
 else

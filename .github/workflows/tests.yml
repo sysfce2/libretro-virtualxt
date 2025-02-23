@@ -5,6 +5,8 @@ on:
     branches: [ "edge", "release" ]
   pull_request:
     branches: [ "develop" ]
+  schedule:
+    - cron: '0 0 * * SUN'
 
   workflow_dispatch:
 
