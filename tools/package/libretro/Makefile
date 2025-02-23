@@ -133,7 +133,6 @@ else ifneq (,$(findstring tvos,$(platform)))
    fpic := -fPIC
    SHARED := -dynamiclib
    MIN_VERSION := -mappletvos-version-min=9.0
-   ODIN_FLAGS += -minimum-os-version:9.0
 
    ifeq ($(TVOSSDK),)
       TVOSSDK := $(shell xcodebuild -version -sdk appletvos Path)
@@ -141,12 +140,12 @@ else ifneq (,$(findstring tvos,$(platform)))
 
    SHARED += -arch arm64 $(MIN_VERSION) -isysroot $(TVOSSDK)
    CC = cc -arch arm64 $(MIN_VERSION) -isysroot $(TVOSSDK)
-   ODIN_TARGET = darwin_arm64
+   ODIN_TARGET = freestanding_arm64
 else ifneq (,$(findstring msvc,$(platform)))
    CC = cl.exe
    LDFLAGS += -DLL
    OBJ_EXT = obj
-   ODIN_TARGET = freestanding_amd64_win64
+   ODIN_TARGET = windows_amd64
    ODIN_UNPACK = powershell -command "Expand-Archive -Force odin.zip ."
 
    PATH := $(shell IFS=$$'\n'; cygpath "$(VS100COMNTOOLS)../../VC/bin/amd64"):$(PATH)
@@ -164,7 +163,8 @@ else ifneq (,$(findstring msvc,$(platform)))
    	 AR = lib.exe
    else
      TARGET := $(TARGET_NAME)_libretro.dll
-   	 LD = link.exe
+     LDFLAGS += kernel32.lib
+     LD = link.exe
    endif
 else
    TARGET := $(TARGET_NAME)_libretro.dll
