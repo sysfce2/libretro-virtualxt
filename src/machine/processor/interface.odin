@@ -44,29 +44,20 @@ reset :: proc() {
 	}
 }
 
-step :: proc() -> (cycles: uint = 1, repeat, div_zero: bool, ok := true) {
+step :: proc(op186 := true) -> (cycles: uint = 1, repeat, div_zero: bool, ok := true) {
 	using state.instruction
 
 	if rep_prefix == 0 {
 		decode_prepare()
-		decode_prefix()
-		decode_opcode()
+		decode_prefix(op186)
+		decode_8086()
+
+		if !valid && op186 {
+			decode_80186()
+		}
 
 		write_cpu_trace()
 		registers.ip += u16(stream.size)
-	}
-
-	// TODO: Remove!
-	@(static) opcode0_count: uint
-	if opcode.raw == 0 {
-		opcode0_count += 1
-		if opcode0_count > 3 {
-			//valid = false
-			opcode0_count = 0
-			//log.error("Opcode zero repeat!")
-		}
-	} else {
-		opcode0_count = 0
 	}
 
 	if valid {

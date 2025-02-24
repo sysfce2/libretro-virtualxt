@@ -62,6 +62,16 @@ wasm:
 run: release
 	retroarch -v -L $(LIB_NAME).$(LIB_EXT)
 
+vxtx: bios/vxtx.asm
+	nasm -o bios/vxtx.bin -l bios/vxtx.lst bios/vxtx.asm
+	./tools/checksum/update_bios_checksum.py bios/vxtx.bin
+
+vxtaspi: tools/drivers/vxtaspi/vxtaspi.asm
+	nasm -f bin -o vxtaspi.sys -l vxtaspi.lst tools/drivers/vxtaspi/vxtaspi.asm
+
+vxtpkt: tools/drivers/vxtpkt/vxtpkt.asm
+	nasm -o vxtpkt.com -l vxtpkt.lst tools/drivers/vxtpkt/vxtpkt.asm
+
 testdata:
 	(cd src/tests/testdata && ./download.py)
 
@@ -70,7 +80,7 @@ tests:
 	odin test src/tests -define:ODIN_TEST_THREADS=1 -define:ODIN_TEST_SHORT_LOGS=true -define:ODIN_TEST_LOG_LEVEL=error -o:speed $(ODIN_VET) $(COLLECTIONS)
 
 clean:
-	rm -f *.o *.so *.dll *.dylib *.wasm
+	rm -f *.o *.obj *.so *.dll *.dylib *.wasm *.lst *.sys *.com
 	rm -f tests $(TEST_DATA)
 	$(MAKE) -C src/modules/gdb clean
 	-$(MAKE) -C tools/circle/kernel clean

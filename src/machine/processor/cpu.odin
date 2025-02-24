@@ -39,6 +39,7 @@ Exception :: enum byte {
 	DEBUG_STEP_EXC = 1,
 	DEBUG_TRAP_EXC = 3,
 	OVERFLOW_EXC   = 4,
+	BOUND_EXC      = 5,
 }
 
 Opcode :: struct #raw_union {
@@ -58,7 +59,7 @@ Instruction :: struct {
 		data: [MAX_INSTRUCTION_SIZE]byte,
 		size: uint,
 		addr: u32,
-		ip:   u16,
+		ip, op_ip: u16,
 	},
 	ea_offset:  u16,
 	rep_prefix: byte,
@@ -215,10 +216,16 @@ stack_push_word :: proc(data: u16) {
 	write_segment_word(.STACK, sp, data)
 }
 
+@(private = "file")
+stack_push_byte :: proc(data: byte) {
+	stack_push_word(u16(i8(data)))
+}
+
 stack_push :: proc {
 	stack_push_segment,
 	stack_push_flags,
 	stack_push_word,
+	stack_push_byte,
 }
 
 stack_pop :: proc() -> u16 {

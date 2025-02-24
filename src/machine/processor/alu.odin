@@ -316,7 +316,7 @@ MUL_eb :: proc() {
 
 	set_psz_flags(al)
 	set_flags({.CARRY, .OVERFLOW}, ah)
-	set_flags({.ZERO}, false)
+	set_flags({.AUXILIARY}, false)
 }
 
 MUL_ew :: proc() {
@@ -327,7 +327,7 @@ MUL_ew :: proc() {
 
 	set_psz_flags(ax)
 	set_flags({.CARRY, .OVERFLOW}, dx)
-	set_flags({.ZERO}, false)
+	set_flags({.AUXILIARY}, false)
 }
 
 IMUL_eb :: proc() {
@@ -338,7 +338,7 @@ IMUL_eb :: proc() {
 
 	set_psz_flags(byte(res & 0xFF))
 	set_flags({.CARRY, .OVERFLOW}, res != i16(i8(res)))
-	set_flags({.ZERO}, false)
+	set_flags({.AUXILIARY}, false)
 }
 
 IMUL_ew :: proc() {
@@ -350,7 +350,17 @@ IMUL_ew :: proc() {
 
 	set_psz_flags(ax)
 	set_flags({.CARRY, .OVERFLOW}, res != i32(i16(res)))
-	set_flags({.ZERO}, false)
+	set_flags({.AUXILIARY}, false)
+}
+
+IMUL_w :: proc(a, b: u16) -> u16 {
+	res := i32(i16(a)) * i32(i16(b))
+	res16 := u16(res & 0xFFFF)
+
+	set_psz_flags(res16)
+	set_flags({.CARRY, .OVERFLOW}, res != i32(i16(res)))
+	set_flags({.AUXILIARY}, false)
+	return res16
 }
 
 DIV_eb :: proc() {

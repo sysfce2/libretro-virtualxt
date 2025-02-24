@@ -45,6 +45,7 @@ AUDIO_FREQUENCY :: 44100
 DEFAULT_DISK_IMAGE :: "boot:svardos_hd.img"
 
 delta_time: retro.usec_t
+current_time: time.Duration
 
 glabios := true
 enable_vga := false
@@ -420,6 +421,7 @@ retro_load_game :: proc "c" (info: ^retro.game_info) -> c.bool {
 
 frame_time_callback :: proc "c" (usec: retro.usec_t) {
 	delta_time = usec
+	current_time += time.Duration(usec) * time.Microsecond
 }
 
 @(export)
@@ -445,11 +447,11 @@ retro_run :: proc "c" () {
 	}
 
 	if _, ok := machine.step(uint(cycles)); !ok {
-		//@(static) msg_timer: time.Time
-		//if time.since(msg_timer) > (5 * time.Second) {
-		//	msg_timer = time.now()
-		//	show_message("Invalid opcodes! This could be because you are running incompatible software")
-		//}
+		@(static) msg_timer: time.Duration
+		if (current_time - msg_timer) > (5 * time.Second) {
+			msg_timer = current_time
+			show_message("Invalid opcodes! You might be running incompatible software")
+		}
 	}
 
 	using frame_buffer

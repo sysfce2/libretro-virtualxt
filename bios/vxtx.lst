@@ -1,0 +1,110 @@
+     1                                  ; Copyright (c) 2019-2025 Andreas T Jonsson <mail@andreasjonsson.se>
+     2                                  ;
+     3                                  ; This software is provided 'as-is', without any express or implied
+     4                                  ; warranty. In no event will the authors be held liable for any damages
+     5                                  ; arising from the use of this software.
+     6                                  ;
+     7                                  ; Permission is granted to anyone to use this software for any purpose,
+     8                                  ; including commercial applications, and to alter it and redistribute it
+     9                                  ; freely, subject to the following restrictions:
+    10                                  ;
+    11                                  ; 1. The origin of this software must not be misrepresented; you must not
+    12                                  ;    claim that you wrote the original software. If you use this software
+    13                                  ;    in a product, an acknowledgment in the product documentation would be
+    14                                  ;    appreciated but is not required.
+    15                                  ;
+    16                                  ; 2. Altered source versions must be plainly marked as such, and must not be
+    17                                  ;    misrepresented as being the original software.
+    18                                  ;
+    19                                  ; 3. This notice may not be removed or altered from any source
+    20                                  ;    distribution.
+    21                                  
+    22                                  cpu 8086
+    23                                  org 0
+    24                                  
+    25 00000000 55                      db 0x55             ; The BIOS...
+    26 00000001 AA                      db 0xAA             ; Signature!
+    27 00000002 04                      db 0x4              ; We're a 2k ROM(4*512 bytes)
+    28 00000003 EB00                    jmp short init
+    29                                  
+    30                                  init:
+    31 00000005 9C                          pushf
+    32 00000006 FA                          cli         ; We don't want to be interrupted now!
+    33                                  
+    34 00000007 E82100                      call install_handlers
+    35                                  
+    36 0000000A 9D                          popf
+    37 0000000B CB                          retf
+    38                                  
+    39                                  int_13_handler:
+    40 0000000C E6B1                        out 0xB1, al
+    41                                  
+    42 0000000E 50                          push ax
+    43                                      
+    44 0000000F 9C                          pushf
+    45 00000010 58                          pop ax
+    46                                  
+    47 00000011 55                          push bp
+    48 00000012 89E5                        mov bp, sp
+    49 00000014 894608                      mov [bp+8], ax
+    50 00000017 5D                          pop bp
+    51                                  
+    52 00000018 58                          pop ax
+    53                                  
+    54 00000019 CF                          iret
+    55                                  
+    56                                  int_19_handler:
+    57 0000001A 55                          push bp
+    58 0000001B 89E5                        mov bp, sp
+    59 0000001D C746040000                  mov word [bp+4], 0
+    60 00000022 C74602007C                  mov word [bp+2], 0x7C00
+    61 00000027 5D                          pop bp
+    62                                  
+    63 00000028 E6B0                        out 0xB0, al
+    64                                  
+    65 0000002A CF                          iret
+    66                                  
+    67                                  install_handlers:
+    68 0000002B 1E                          push ds
+    69 0000002C 50                          push ax
+    70                                  
+    71 0000002D B80000                      mov ax,0
+    72 00000030 8ED8                        mov ds,ax   ; Point DS to the IVT
+    73                                  
+    74                                      ; Set up our own vectors!
+    75 00000032 C7064C00[0C00]              mov word [INT_13_OFFSET], int_13_handler
+    76 00000038 8C0E4E00                    mov [INT_13_OFFSET+2], cs
+    77                                      
+    78 0000003C C7066400[1A00]              mov word [INT_19_OFFSET], int_19_handler
+    79 00000042 8C0E6600                    mov [INT_19_OFFSET+2], cs
+    80                                      
+    81                                      ; Update equipment word to reflect virtual floppy controller.
+    82 00000046 B84000                      mov ax, 0x40 		; BDA
+    83 00000049 8ED8                        mov ds, ax
+    84 0000004B 3EA11000                    mov ax, [ds:0x10]	; Read equipment word.
+    85 0000004F 2500C0                  	and ax, 0xC000 		; Indicate 1 floppy drive.
+    86 00000052 83C801                  	or ax, 1 			; Indicate floppy drivers are present.
+    87 00000055 3EA31000                	mov [ds:0x10], ax	; Write new equipment word.
+    88                                  	
+    89 00000059 58                          pop ax
+    90 0000005A 1F                          pop ds
+    91 0000005B C3                          ret
+    92                                  
+    93                                  ;;;;;;;;;;;;;;;;;; Data ;;;;;;;;;;;;;;;;;;
+    94                                  
+    95                                  INT_13_OFFSET  equ 0x4C
+    96                                  INT_19_OFFSET  equ 0x64
+    97                                  
+    98 0000005C 56585458202D205669-     db 'VXTX - VirtualXT BIOS Extensions', 0xA
+    98 00000065 727475616C58542042-
+    98 0000006E 494F5320457874656E-
+    98 00000077 73696F6E730A       
+    99 0000007D 5468697320776F726B-     db 'This work is licensed under the zlib license.', 0
+    99 00000086 206973206C6963656E-
+    99 0000008F 73656420756E646572-
+    99 00000098 20746865207A6C6962-
+    99 000000A1 206C6963656E73652E-
+    99 000000AA 00                 
+   100                                  
+   101 000000AB 00<rep 754h>            times 0x7FF-($-$$) db 0
+   102 000007FF 00                      checksum db 0
