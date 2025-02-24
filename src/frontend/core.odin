@@ -445,11 +445,11 @@ retro_run :: proc "c" () {
 	}
 
 	if _, ok := machine.step(uint(cycles)); !ok {
-		@(static) msg_timer: time.Time
-		if time.since(msg_timer) > (5 * time.Second) {
-			msg_timer = time.now()
-			show_message("Invalid opcodes! This could be because you are running incompatible software")
-		}
+		//@(static) msg_timer: time.Time
+		//if time.since(msg_timer) > (5 * time.Second) {
+		//	msg_timer = time.now()
+		//	show_message("Invalid opcodes! This could be because you are running incompatible software")
+		//}
 	}
 
 	using frame_buffer
