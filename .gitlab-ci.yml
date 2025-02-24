@@ -13,9 +13,13 @@
 # Inclusion templates, required for the build to work
 include:
   ################################## DESKTOPS ################################
-  # Windows msvc10 64-bit
+  # Windows 64-bit
   - project: 'libretro-infrastructure/ci-templates'
-    file: '/windows-x64-msvc10-msys2.yml'
+    file: '/windows-x64-mingw.yml'
+
+  # Windows msvc10 64-bit
+  #- project: 'libretro-infrastructure/ci-templates'
+  #  file: '/windows-x64-msvc10-msys2.yml'
 
   # Linux 64-bit
   - project: 'libretro-infrastructure/ci-templates'
@@ -49,20 +53,28 @@ stages:
 ##############################################################################
 #
 ################################### DESKTOPS #################################
-# Windows msvc10 64-bit
-libretro-build-windows-msvc10-x64:
+# Windows 64-bit
+libretro-build-windows-x64:
   only:
     - develop
     - edge
     - release
   extends:
-    - .libretro-windows-x64-msvc10-msys2-make-default
+    - .libretro-windows-x64-mingw-make-default
     - .core-defs
+
+# Windows msvc10 64-bit
+#libretro-build-windows-msvc10-x64:
+#  only:
+#    - edge
+#    - release
+#  extends:
+#    - .libretro-windows-x64-msvc10-msys2-make-default
+#    - .core-defs
 
 # Linux 64-bit
 libretro-build-linux-x64:
   only:
-    - develop
     - edge
     - release
   extends:
@@ -72,7 +84,6 @@ libretro-build-linux-x64:
 # MacOS 64-bit
 #libretro-build-osx-x64:
 #  only:
-#    - develop
 #    - edge
 #    - release
 #  extends:
@@ -82,7 +93,6 @@ libretro-build-linux-x64:
 # MacOS ARM 64-bit
 libretro-build-osx-arm64:
   only:
-    - develop
     - edge
     - release
   extends:
@@ -93,7 +103,6 @@ libretro-build-osx-arm64:
 # Android ARMv7a
 #android-armeabi-v7a:
 #  only:
-#    - develop
 #    - edge
 #    - release
 #  extends:
@@ -103,37 +112,15 @@ libretro-build-osx-arm64:
 # Android ARMv8a
 android-arm64-v8a:
   only:
-    - develop
     - edge
     - release
   extends:
     - .libretro-android-make-arm64-v8a
     - .core-defs
 
-# Android 64-bit x86
-#android-x86_64:
-#  only:
-#    - develop
-#    - edge
-#    - release
-#  extends:
-#    - .libretro-android-make-x86_64
-#    - .core-defs
-    
-# Android 32-bit x86
-#android-x86:
-#  only:
-#    - develop
-#    - edge
-#    - release
-#  extends:
-#    - .libretro-android-make-x86
-#    - .core-defs
-
 # iOS
 libretro-build-ios-arm64:
   only:
-    - develop
     - edge
     - release
   extends:
