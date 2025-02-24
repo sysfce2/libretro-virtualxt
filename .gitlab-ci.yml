@@ -14,8 +14,8 @@
 include:
   ################################## DESKTOPS ################################
   # Windows 64-bit
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/windows-x64-mingw.yml'
+  #- project: 'libretro-infrastructure/ci-templates'
+  #  file: '/windows-x64-mingw.yml'
 
   # Windows msvc10 64-bit
   #- project: 'libretro-infrastructure/ci-templates'
@@ -54,14 +54,13 @@ stages:
 #
 ################################### DESKTOPS #################################
 # Windows 64-bit
-libretro-build-windows-x64:
-  only:
-    - develop
-    - edge
-    - release
-  extends:
-    - .libretro-windows-x64-mingw-make-default
-    - .core-defs
+#libretro-build-windows-x64:
+#  only:
+#    - edge
+#    - release
+#  extends:
+#    - .libretro-windows-x64-mingw-make-default
+#    - .core-defs
 
 # Windows msvc10 64-bit
 #libretro-build-windows-msvc10-x64:
