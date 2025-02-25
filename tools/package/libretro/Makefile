@@ -189,7 +189,7 @@ setup:
 
 $(OBJECTS): setup
 	PATH="$(PATH):$(MKPATH)/odin-$(system_odin)-$(ODIN_VERSION)" ODIN_TARGET=$(ODIN_TARGET) ODIN_FLAGS="$(ODIN_FLAGS)" ODIN_VET= $(MAKE) -C $(CORE_DIR) object
-	ifneq (,$(findstring objconv,$(OBJCONV)))
+	ifneq ($(OBJCONV),)
 		$(OBJCONV) $(CORE_DIR)$(TARGET_NAME)_libretro.obj $(CORE_DIR)$(OBJECTS)
 	endif
 

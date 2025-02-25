@@ -31,7 +31,6 @@ PLANE_SIZE :: 0x10000
 MEMORY_SIZE :: 0x40000
 MEMORY_BASE :: 0xA0000
 TEXTMODE_BASE :: 0x18000
-SCANLINE_TIMING :: 16
 CURSOR_TIMING :: 333333
 
 VGA :: struct {
@@ -43,6 +42,7 @@ VGA :: struct {
 	cursor_start, cursor_end:      byte,
 	cursor_offset:                 u16,
 	scanline_timer, retrace_timer, refresh_timer: peripheral.Peripheral_Timer_ID,
+	scanline:                      uint,
 	width, height:                 uint,
 	bpp:                           byte,
 	textmode:                      bool,
@@ -102,11 +102,11 @@ update_video_mode :: proc(vga: ^VGA) {
 
 	freq_div := f64(htotal * vtotal * dots)
 	interval_us := (freq_div > 0) ? uint(500000 / (pixel_clock / freq_div)) : 0
-	//vxt_system_set_timer_interval(VXT_GET_SYSTEM(v), v->retrace_timer, interval_us)
+	peripheral.set_timer_interval(vga.retrace_timer, interval_us)
 
 	freq_div = f64(htotal * dots)
 	interval_us = (freq_div > 0) ? uint(500000 / (pixel_clock / freq_div)) : 0
-	//vxt_system_set_timer_interval(VXT_GET_SYSTEM(v), v->scanline_timer, interval_us)
+	peripheral.set_timer_interval(vga.scanline_timer, interval_us)
 
 	vga.modeset_callback(vga.width, vga.height)
 
@@ -245,11 +245,11 @@ write :: proc(using vga: ^VGA, addr: u32, data: byte) {
 			for i: u32; i < 4; i += 1 {
 				m: byte = 1 << i
 				if bool(map_mask & m) {
-					value := rdata
+					value: byte
 					if bool(gr[1] & m) {
 						value = bool(gr[0] & m) ? 0xFF : 0
 					} else {
-						value = rotate_op(gr, value)
+						value = rotate_op(gr, rdata)
 					}
 					value = logic_op(gr, value, mem_latch[i])
 					mem[sanitaze_address(mstart + PLANE_SIZE * i)] = (bit_mask & value) | (~bit_mask & mem_latch[i])
@@ -417,6 +417,13 @@ io_out :: proc(vga: ^VGA, port: u16, data: byte) {
 timer :: proc(using vga: ^VGA, id: peripheral.Peripheral_Timer_ID, _: uint) {
 	if scanline_timer == id {
 		regs.status_reg ~= 1
+		render_scanline(vga, scanline)
+		scanline += 1
+
+		// TODO: Fix this!
+		if scanline >= height {
+			scanline = 0
+		}
 	} else if retrace_timer == id {
 		regs.status_reg ~= 8
 	} else if refresh_timer == id {

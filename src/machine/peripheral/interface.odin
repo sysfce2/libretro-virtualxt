@@ -184,3 +184,7 @@ register_timer :: proc(p: any, us: uint = 0) -> Peripheral_Timer_ID {
 	append(&peripheral_manager.timers, Timer_Internal{interval = f64(us) / 1000000, pidx = pint.pidx})
 	return id
 }
+
+set_timer_interval :: proc(id: Peripheral_Timer_ID, us: uint) {
+	peripheral_manager.timers[id].interval = f64(us) / 1000000
+}

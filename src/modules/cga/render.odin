@@ -83,7 +83,7 @@ render_scanline :: proc(using cga: ^CGA, y: uint) {
 			pixel := (mem[sanitaze_address(addr)] >> (7 - (x & 7))) & 1
 			color := palette[pixel * border_color]
 			frame_buffer[y * 640 + x] = color
-		}	
+		}
 	} else {
 		intensity := ((color_ctrl_reg >> 4) & 1) << 3
 		pal5 := bool(mode_ctrl_reg & 4)
