@@ -170,6 +170,13 @@ decode_shift_word :: proc() {
 	}
 }
 
+decode_opcode :: proc(op186: bool) {
+	decode_8086()
+	if !state.instruction.valid && op186 {
+		decode_80186()
+	}
+}
+
 decode_fetch_byte :: proc() -> byte {
 	using state.instruction
 

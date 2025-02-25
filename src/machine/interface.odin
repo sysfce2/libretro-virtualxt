@@ -172,11 +172,11 @@ print_status :: proc() {
 	log.info("----------------------------------------")
 }
 
-step :: proc(cycles: uint) -> (res: Step, ok := true) {
+step :: proc(cycles: uint, op186 := true) -> (res: Step, ok := true) {
 	using peripheral.peripheral_manager
 
 	for res.cycles < cycles {
-		n, r, z, s := processor.step()
+		n, r, z, s := processor.step(op186)
 		assert(n > 0)
 		if !s {
 			ok = s

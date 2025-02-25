@@ -111,11 +111,11 @@ load_sr :: proc() -> u16 {
 	return get_segment_register(Segment(state.instruction.mode.reg & 3))^
 }
 
-load_m1616 :: proc() -> (reg, seg: u16) {
+load_m1616 :: proc() -> (a, b: u16) {
 	using state
 	ea_seg := get_ea_segment()
-	reg = read_segment_word(ea_seg, instruction.ea_offset)
-	seg = read_segment_word(ea_seg, instruction.ea_offset + 2)
+	a = read_segment_word(ea_seg, instruction.ea_offset)
+	b = read_segment_word(ea_seg, instruction.ea_offset + 2)
 	return
 }
 

@@ -50,6 +50,7 @@ current_time: time.Duration
 glabios := true
 enable_vga := false
 enable_ems := true
+enable_186 := true
 
 reset_default_disk, floppy_boot_prio: bool
 gdb_server, gdb_halt: bool
@@ -76,6 +77,7 @@ options := [?]retro.variable {
 	{"virtualxt_boot_priority", "Boot priority; FD|HD"},
 	{"virtualxt_video", "Video standard; CGA|VGA"},
 	{"virtualxt_cpu_frequency", "CPU frequency; 4.77MHz|7.15MHz|14.3MHz"},
+	{"virtualxt_186", "80186 instructions; true|false"},
 	{"virtualxt_ems", "EMS memory; true|false"},
 	{"virtualxt_bios", "BIOS; GLaBIOS 0.2.6|TurboXT 3.1"},
 	{"virtualxt_gdb", "GDB server; " + ("false|true" when #config(VXT_GDBSTUB, false) else "false")},
@@ -244,6 +246,13 @@ check_variables :: proc() {
 		n, _, ok := strconv.parse_f64_prefix(string(var.value))
 		assert(ok)
 		machine.configure("machine", "cpu_frequency", uint(n * 1000000))
+	}
+
+	var = retro.variable {
+		key = "virtualxt_186",
+	}
+	if (retro_callbacks.environment(retro.ENVIRONMENT_GET_VARIABLE, &var) && (var.value != nil)) {
+		enable_186, _ = strconv.parse_bool(string(var.value))
 	}
 
 	var = retro.variable {
@@ -446,7 +455,7 @@ retro_run :: proc "c" () {
 		cycles = n
 	}
 
-	if _, ok := machine.step(uint(cycles)); !ok {
+	if _, ok := machine.step(uint(cycles), enable_186); !ok {
 		@(static) msg_timer: time.Duration
 		if (current_time - msg_timer) > (5 * time.Second) {
 			msg_timer = current_time

@@ -44,17 +44,13 @@ reset :: proc() {
 	}
 }
 
-step :: proc(op186 := true) -> (cycles: uint = 1, repeat, div_zero: bool, ok := true) {
+step :: proc(op186: bool) -> (cycles: uint = 1, repeat, div_zero: bool, ok := true) {
 	using state.instruction
 
 	if rep_prefix == 0 {
 		decode_prepare()
 		decode_prefix(op186)
-		decode_8086()
-
-		if !valid && op186 {
-			decode_80186()
-		}
+		decode_opcode(op186)
 
 		write_cpu_trace()
 		registers.ip += u16(stream.size)
@@ -80,7 +76,6 @@ step :: proc(op186 := true) -> (cycles: uint = 1, repeat, div_zero: bool, ok := 
 
 		switch opcode.raw {
 		case 0xA6, 0xA7, 0xAE, 0xAF:
-			// Has flag conditions.
 			if rep_prefix == 0xF2 {
 				// REPNE/REPNZ
 				rep_prefix &= (.ZERO in flags) ? 0 : 0xFF

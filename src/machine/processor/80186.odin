@@ -62,16 +62,9 @@ decode_80186 :: proc() {
 		// BOUND
 		exec = proc() {
 			idx := i16(load_rw())
-			seg, offset := load_m1616()
+			bmin, bmax := load_m1616()
 
-			read_word :: proc(seg, offset: u16) -> u16 {
-				using peripheral.peripheral_interface
-				base := u32(seg) << 4
-				return (u16(read(base + u32(offset + 1))) << 8) | u16(read(base + u32(offset)))
-			}
-
-			if (idx < i16(read_word(seg, offset))) || (idx > i16(read_word(seg, offset + 2))) {
-				registers.ip = state.instruction.stream.op_ip
+			if (idx < i16(bmin)) || (idx > i16(bmax)) {
 				throw_exception(.BOUND_EXC)
 			}
 		}
@@ -87,6 +80,7 @@ decode_80186 :: proc() {
 		exec = proc() {
 			store_rw(IMUL_w(load_ew(), state.instruction.iw1))
 		}
+		decode_mod_reg_rm()
 		iw1 = decode_fetch_word()
 	case 0x6A:
 		// PUSH ib - Push immediate sign-extended byte
@@ -99,6 +93,7 @@ decode_80186 :: proc() {
 		exec = proc() {
 			store_rw(IMUL_w(load_ew(), u16(i8(state.instruction.ib))))
 		}
+		decode_mod_reg_rm()
 		ib = decode_fetch_byte()
 	case 0x6C:
 		// INSB - Input byte from port DX into ES:[DI]

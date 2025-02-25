@@ -6,7 +6,8 @@ import os
 import requests
 import shutil
 
-test_url = "https://github.com/virtualxt/8088/raw/main/v2/"
+test_8088 = "https://github.com/virtualxt/8088/raw/main/v2/"
+test_V20 = "https://github.com/virtualxt/v20/raw/main/v1_native/"
 index_filename = "metadata.json"
 test_filename = "../opcodes.odin"
 
@@ -34,8 +35,8 @@ skip_opcodes = (
     (0xF6, 7), (0xF7, 7),
 )
 
-def check_and_download(filename):
-    if not os.path.exists(filename):
+def check_and_download(filename, overwrite = False):
+    if overwrite or not os.path.exists(filename):
         print("Downloading: " + filename)
 
         url = test_url + filename
@@ -61,10 +62,14 @@ def skip_opcode(name):
 
     return False
 
-def unpack_test(name, status):
-    if skip_opcode(name):
+def skip_opcode_v20(name, data):
+    opcode = int(name[:2], 16)
+    # NOTE: Testdata is missing arch tag.
+    if opcode >= 0x60 and opcode <= 0x62:
         return False
+    return "arch" not in data or data["arch"] != "186"
 
+def unpack_test(name, status):
     # TODO: Test aliases?
     if status in ["undefined", "prefix", "fpu", "undocumented", "alias"]:
         return False
@@ -95,7 +100,10 @@ def gen_test(name, data):
 
 ####################### Start #######################
 
-if check_and_download(index_filename):
+# Target 8088 tests
+test_url = test_8088
+
+if check_and_download(index_filename, True):
     index_file = json.loads(open(index_filename, "r").read())
 
     with open(test_filename, "w") as f:
@@ -109,8 +117,32 @@ if check_and_download(index_filename):
         if "reg" in data:
             for reg,rd in data["reg"].items():
                 name = "{}.{}".format(opcode, reg)
+                if skip_opcode(name):
+                    continue
                 if unpack_test(name, rd["status"]):
                     gen_test(name, rd)
         else:
+            if skip_opcode(opcode):
+                continue
+            if unpack_test(opcode, data["status"]):
+                gen_test(opcode, data)
+
+# Target V20 tests
+test_url = test_V20
+
+if check_and_download(index_filename, True):
+    index_file = json.loads(open(index_filename, "r").read())
+
+    for opcode,data in index_file["opcodes"].items():      
+        if "reg" in data:
+            for reg,rd in data["reg"].items():
+                name = "{}.{}".format(opcode, reg)
+                if skip_opcode_v20(name, rd):
+                    continue
+                if unpack_test(name, rd["status"]):
+                    gen_test(name, rd)
+        else:
+            if skip_opcode_v20(opcode, data):
+                continue
             if unpack_test(opcode, data["status"]):
                 gen_test(opcode, data)
