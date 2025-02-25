@@ -181,25 +181,106 @@ sanitaze_address :: proc(#any_int ptr: u32) -> u32 {
 	return ptr & (MEMORY_SIZE - 1)
 }
 
-read :: proc(vga: ^VGA, addr: u32) -> byte {
-	a := sanitaze_address(addr - MEMORY_BASE)
-	if vga.textmode || bool(vga.regs.seq_reg[4] & 8) {
-		return vga.mem[a]
+read :: proc(using vga: ^VGA, addr: u32) -> byte {
+	mstart := addr - MEMORY_BASE
+	if textmode || bool(regs.seq_reg[4] & 8) {
+		return mem[sanitaze_address(mstart)]
 	}
-	
-	return 0
+
+	mem_latch[0] = mem[sanitaze_address(mstart)]
+	mem_latch[1] = mem[sanitaze_address(mstart + PLANE_SIZE)]
+	mem_latch[2] = mem[sanitaze_address(mstart + PLANE_SIZE * 2)]
+	mem_latch[3] = mem[sanitaze_address(mstart + PLANE_SIZE * 3)]
+
+	data: byte
+	if bool(regs.seq_reg[5] & 8) { // Readmode 1
+		map_mask := regs.seq_reg[2] & 0xF
+		for i: u32; i < 4; i += 1 {
+			m: byte = 1 << i
+			if bool(map_mask & m) && bool(regs.gfx_reg[7] & m) {
+				if mem[sanitaze_address(mstart + PLANE_SIZE * i)] == (regs.gfx_reg[2] & 0xF) {
+					data |= m
+				}
+			}
+		}
+	} else { // Readmode 0
+		data = mem_latch[regs.gfx_reg[4] & 3]
+	}
+	return data
 }
 
-write :: proc(vga: ^VGA, addr: u32, data: byte) {
-	a := sanitaze_address(addr - MEMORY_BASE)
-	vga.is_dirty = true
+write :: proc(using vga: ^VGA, addr: u32, data: byte) {
+	mstart := addr - MEMORY_BASE
+	is_dirty = true
 
-	if vga.textmode || bool(vga.regs.seq_reg[4] & 8) {
-		vga.mem[a] = data
+	if textmode || bool(regs.seq_reg[4] & 8) {
+		mem[sanitaze_address(mstart)] = data
 		return
 	}
-	
-	vga.mem[a] = 0
+
+	gr := regs.gfx_reg[:]
+	bit_mask := gr[8]
+	map_mask := regs.seq_reg[2] & 0xF
+
+	rotate_op :: proc(gc: []byte, data: byte) -> byte {
+		v := data
+		for i: byte; i < (gc[3] & 7); i += 1 {
+			v = (v >> 1) | ((v & 1) << 7)
+		}
+		return v
+	}
+
+	logic_op :: proc(gc: []byte, data, latch: byte) -> byte {
+		switch (gc[3] >> 3) & 3 {
+			case 1: return data & latch
+			case 2: return data | latch
+			case 3: return data ~ latch
+			case: return data
+		}
+	}
+
+	switch gr[5] & 3 {
+		case 0:
+			rdata := rotate_op(gr, data)
+			for i: u32; i < 4; i += 1 {
+				m: byte = 1 << i
+				if bool(map_mask & m) {
+					value := rdata
+					if bool(gr[1] & m) {
+						value = bool(gr[0] & m) ? 0xFF : 0
+					} else {
+						value = rotate_op(gr, value)
+					}
+					value = logic_op(gr, value, mem_latch[i])
+					mem[sanitaze_address(mstart + PLANE_SIZE * i)] = (bit_mask & value) | (~bit_mask & mem_latch[i])
+				}
+			}
+		case 1:
+			for i: u32; i < 4; i += 1 {
+				m: byte = 1 << i
+				if bool(map_mask & m) {
+					mem[sanitaze_address(mstart + PLANE_SIZE * i)] = mem_latch[i]
+				}
+			}
+		case 2:
+			for i: u32; i < 4; i += 1 {
+				m: byte = 1 << i
+				if bool(map_mask & m) {
+					value: byte = bool(data & m) ? 0xFF : 0
+					value = logic_op(gr, value, mem_latch[i])
+					mem[sanitaze_address(mstart + PLANE_SIZE * i)] = (bit_mask & value) | (~bit_mask & mem_latch[i])
+				}
+			}
+		case 3:
+			value := rotate_op(gr, data) & bit_mask
+			for i: u32; i < 4; i += 1 {
+				m: byte = 1 << i
+				if bool(map_mask & m) {
+					set_reset: byte = bool(gr[0] & m) ? 0xFF : 0
+					mem[sanitaze_address(mstart + PLANE_SIZE * i)] = (value & set_reset) | (~value & mem_latch[i])
+				}
+			}
+	}
 }
 
 io_in :: proc(vga: ^VGA, port: u16) -> byte {

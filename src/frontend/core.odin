@@ -187,7 +187,7 @@ add_image_index :: proc "c" () -> c.bool {
 
 @(export)
 retro_init :: proc "c" () {
-	when !#config(VXT_EXTERNAL_HEAP, false) {
+	when #config(VXT_STARTUP_RUNTIME, false) {
 		odin_startup_runtime(nil, 0)
 	}
 }
@@ -220,7 +220,6 @@ retro_set_environment :: proc "c" (cb: retro.environment_t) {
 		}
 
 		default_context.logger = runtime.Logger{logger_proc, rawptr(logging.log), .Debug, nil}
-		context = default_context
 	}
 
 	cb(ENVIRONMENT_SET_VARIABLES, &options)
