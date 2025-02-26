@@ -56,9 +56,6 @@ rasberrypi:
 object:
 	$(ODIN_BUILD) -out:$(LIB_NAME).o -build-mode:object -define:VXT_STARTUP_RUNTIME=true $(TARGET_PARAM) -o:speed $(ODIN_FLAGS)
 
-wasm:
-	$(ODIN_BUILD) -out:$(LIB_NAME).wasm -build-mode:shared -target:freestanding_wasm32 -o:speed $(ODIN_FLAGS)
-
 run: release
 	retroarch -v -L $(LIB_NAME).$(LIB_EXT)
 

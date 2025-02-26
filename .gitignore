@@ -63,6 +63,8 @@ dkms.conf
 /tools/circle/kernel/*.img
 /tools/circle/kernel/*.lst
 
+/tools/webplayer/*.img
+
 /src/tests/testdata/*.json*
 /src/tests/opcodes.odin
 /tests

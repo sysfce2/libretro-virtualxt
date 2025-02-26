@@ -143,6 +143,14 @@ else ifneq (,$(findstring tvos,$(platform)))
    SHARED += -arch arm64 $(MIN_VERSION) -isysroot $(TVOSSDK)
    CC = cc -arch arm64 $(MIN_VERSION) -isysroot $(TVOSSDK)
    ODIN_TARGET = freestanding_arm64
+else ifeq ($(platform), emscripten)
+   TARGET := $(TARGET_NAME)_libretro_emscripten.bc
+   fpic := -fPIC
+   SHARED := -shared -Wl,--no-undefined
+   STATIC_LINKING=1
+   AR = emar
+   ODIN_TARGET = freestanding_wasm32
+   ODIN_FLAGS = -reloc-mode:pic
 else ifneq (,$(findstring msvc,$(platform)))
    CC = cl.exe
    LDFLAGS += -DLL
