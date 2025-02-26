@@ -264,26 +264,26 @@ io_out :: proc(disk: ^Disk, port: u16, _: byte) {
 	drive := &disk.drives[dl]
 
 	switch ah {
-	case 0:
+	case 0x0:
 		// Reset
 		ah = 0
 		flags -= {.CARRY}
-	case 1:
+	case 0x1:
 		// Return status
 		ah = drive.status
 		flags = drive.error ? (flags + {.CARRY}) : (flags - {.CARRY})
 		return
-	case 2:
+	case 0x2:
 		// Read sector
 		execute_and_set(disk, true)
-	case 3:
+	case 0x3:
 		// Write sector
 		execute_and_set(disk, false)
-	case 4, 5:
+	case 0x4 ..= 0x7:
 		// Format track
 		ah = 0
 		flags -= {.CARRY}
-	case 8:
+	case 0x8:
 		// Drive parameters
 		if drive.fp == nil {
 			ah = 0xAA
@@ -302,6 +302,10 @@ io_out :: proc(disk: ^Disk, port: u16, _: byte) {
 				dl = disk.num_hd
 			}
 		}
+	case 0x18:
+		// Set Media Type for Format
+		ah = 1 // Function not available
+		fallthrough
 	case:
 		flags += {.CARRY}
 	}
