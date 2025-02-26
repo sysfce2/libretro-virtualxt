@@ -35,7 +35,9 @@ else ifneq ($(findstring MINGW,$(shell uname -a)),)
 	system_odin = windows-amd64
 endif
 
+OBJCONV :=
 OBJ_EXT := o
+
 ifeq ($(STATIC_LINKING), 1)
    EXT := a
 else
