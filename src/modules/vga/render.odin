@@ -60,10 +60,7 @@ blit_char :: proc(vga: ^VGA, ch: int, attr: byte, x, y: int) {
 	font_b := ((char_map_reg >> 2) & 4) | (char_map_reg & 3)
 	font := bool(attr & 8) ? FONT_OFFSETS[font_b] : FONT_OFFSETS[font_a]
 
-	// TODO: Fix this! We only run at 640 in textmode.
-	width := (vga.width >= 640) ? 640 : 320
 	ch_idx := ch
-
 	start := 0
 	end := 15
 
@@ -80,7 +77,7 @@ blit_char :: proc(vga: ^VGA, ch: int, attr: byte, x, y: int) {
 		for j := 0; j < 8; j += 1 {
 			mask := byte(0x80) >> uint(j)
 			color := bool(glyph_line & mask) ? fg_color : bg_color
-			offset := width * (y + n) + x + j
+			offset := int(vga.width) * (y + n) + x + j
 			vga.frame_buffer[offset] = color
 		}
 
@@ -104,7 +101,7 @@ render_textmode :: proc(vga: ^VGA) {
 	num_char := num_col * 25
 	
 	for i := 0; i < num_char; i += 1 {
-		cell_offset := TEXTMODE_BASE + video_page + i * 2
+		cell_offset := CGA_BASE + video_page + i * 2
 		ch := mem[sanitaze_address(cell_offset)]
 		attr := mem[sanitaze_address(cell_offset + 1)]
 		
@@ -140,11 +137,11 @@ render_scanline :: proc(using vga: ^VGA, y: uint) {
 		switch bpp {
 			case 1:
 				addr := (y >> 1) * 80 + (y & 1) * 8192 + (x >> 3)
-				index := (mem[sanitaze_address(addr)] >> (7 - (x & 7))) & 1
+				index := (mem[sanitaze_address(CGA_BASE + addr)] >> (7 - (x & 7))) & 1
 				color = color_lookup(vga, index)
 			case 2:
 				addr := (y >> 1) * 80 + (y & 1) * 8192 + (x >> 2)
-				index := (mem[sanitaze_address(addr)] >> (6 - (x & 3) * 2)) & 3
+				index := (mem[sanitaze_address(CGA_BASE + addr)] >> (6 - (x & 3) * 2)) & 3
 				color = color_lookup(vga, index)
 			case 4:
 				addr := y * (width >> 3) + (x >> 3) + video_page

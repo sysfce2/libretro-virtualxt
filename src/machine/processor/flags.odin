@@ -120,7 +120,7 @@ validate_flags_word :: proc(flags: u16) -> u16 {
 
 @(private="file")
 validate_flags_set :: proc(flags: peripheral.Peripheral_CPU_Flags) -> u16 {
-	return transmute(u16)((flags & VALID_FLAGS) + { .RESERVED_0, .RESERVED_3, .RESERVED_4, .RESERVED_5, .RESERVED_6 })
+	return transmute(u16)((flags & VALID_FLAGS) + state.reserved)
 }
 
 validate_flags :: proc {

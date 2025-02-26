@@ -37,7 +37,14 @@ reset :: proc() {
 		ip    = 0,
 		cs    = 0xFFFF,
 	}
+}
 
+initialize :: proc(flag286: bool) {
+	state.reserved = { .RESERVED_0 }
+	if !flag286 {
+		state.reserved += { .RESERVED_3, .RESERVED_4, .RESERVED_5, .RESERVED_6 }
+	}
+	
 	ok: bool
 	if _, interrupt_controler, ok = peripheral.get_peripheral_from_class(.PIC); !ok {
 		log.warn("Interrupt controller is not connected!")
@@ -88,7 +95,7 @@ step :: proc(op186: bool) -> (cycles: uint = 1, repeat, div_zero: bool, ok := tr
 
 	check_interrupts()
 	
-	cycles += 12 // TODO: Fix this!
+	cycles += 8 // TODO: Fix this!
 	repeat = rep_prefix != 0
 	return
 }

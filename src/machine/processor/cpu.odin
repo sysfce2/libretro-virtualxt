@@ -79,6 +79,7 @@ state: struct {
 	shift_count:      			byte,
 	halt, trap:   				bool,
 	invert_quotient, div_zero:  bool,
+	reserved:                   peripheral.Peripheral_CPU_Flags,
 }
 
 check_interrupts :: proc() {

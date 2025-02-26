@@ -30,7 +30,7 @@ import "vxt:machine/peripheral"
 PLANE_SIZE :: 0x10000
 MEMORY_SIZE :: 0x40000
 MEMORY_BASE :: 0xA0000
-TEXTMODE_BASE :: 0x18000
+CGA_BASE :: 0x18000
 CURSOR_TIMING :: 333333
 
 VGA :: struct {
@@ -95,9 +95,7 @@ update_video_mode :: proc(vga: ^VGA) {
 		}
 	}
 
-	// TODO: Fix this! We only run at 640 in textmode.
-	//vga.width = clamp(vga.width, 160, 720)
-	vga.width = clamp(vga.width, 160, 640)
+	vga.width = clamp(vga.width, 160, 640) // TODO: Should clamp to 720
 	vga.height = clamp(vga.height, 100, 480)
 
 	freq_div := f64(htotal * vtotal * dots)

@@ -58,7 +58,7 @@ create :: proc() -> bool {
 	return true
 }
 
-initialize :: proc() -> bool {
+initialize :: proc(flag286 := false) -> bool {
 	for p in peripheral.peripheral_manager.peripherals {
 		if p.install == nil {
 			continue
@@ -75,7 +75,9 @@ initialize :: proc() -> bool {
 		}
 	}
 
+	processor.initialize(flag286)
 	reset()
+
 	return true
 }
 
