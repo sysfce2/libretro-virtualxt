@@ -35,9 +35,7 @@ else ifneq ($(findstring MINGW,$(shell uname -a)),)
 	system_odin = windows-amd64
 endif
 
-OBJCONV :=
 OBJ_EXT := o
-
 ifeq ($(STATIC_LINKING), 1)
    EXT := a
 else
@@ -199,9 +197,9 @@ setup:
 
 $(OBJECTS): setup
 	PATH="$(PATH):$(MKPATH)/odin-$(system_odin)-$(ODIN_VERSION)" ODIN_TARGET=$(ODIN_TARGET) ODIN_FLAGS="$(ODIN_FLAGS)" ODIN_VET= $(MAKE) -C $(CORE_DIR) object
-	ifneq ($(OBJCONV),)
-		$(OBJCONV) $(CORE_DIR)$(TARGET_NAME)_libretro.obj $(CORE_DIR)$(OBJECTS)
-	endif
+	#ifneq ($(OBJCONV),)
+	#	$(OBJCONV) $(CORE_DIR)$(TARGET_NAME)_libretro.obj $(CORE_DIR)$(OBJECTS)
+	#endif
 
 $(TARGET): $(OBJECTS)
 ifeq ($(STATIC_LINKING), 1)
