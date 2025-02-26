@@ -135,6 +135,7 @@ libretro-build-ios-arm64:
 # Emscripten
 libretro-build-emscripten:
   only:
+    - develop
     - edge
     - release
   extends:
