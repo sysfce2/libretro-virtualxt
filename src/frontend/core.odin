@@ -40,8 +40,12 @@ import "vxt:machine"
 
 VXT_VERSION :: "1.3.0"
 MAX_DISK_IMAGES :: 256
+LOG_BUFFER_SIZE :: 1024
 AUDIO_FREQUENCY :: 44100
 DEFAULT_DISK_IMAGE :: "boot:svardos_hd.img"
+
+@(thread_local)
+log_buffer: [LOG_BUFFER_SIZE]byte
 
 delta_time: retro.usec_t
 current_time: time.Duration
@@ -189,10 +193,11 @@ retro_set_environment :: proc "c" (cb: retro.environment_t) {
 			case .Error, .Fatal:
 				lv = .LOG_ERROR
 			}
-
-			cstr := strings.clone_to_cstring(text)
-			log_printf_t(data)(lv, "%s\n", cstr)
-			delete(cstr)
+			
+			builder := strings.builder_from_bytes(log_buffer[:])
+			strings.write_string(&builder, text)
+			log_buffer[LOG_BUFFER_SIZE - 1] = 0 // Ensure we always are terminated.
+			log_printf_t(data)(lv, "%s\n", strings.to_cstring(&builder))
 		}
 
 		default_context.logger = runtime.Logger{logger_proc, rawptr(logging.log), .Debug, nil}

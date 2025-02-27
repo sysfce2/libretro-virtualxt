@@ -23,7 +23,7 @@
 #include <circle/startup.h>
 #include <circle/memory.h>
 
-#define ODIN_HEAP_SIZE (1024 * 1024 * 10)
+#define ODIN_HEAP_SIZE (1024 * 1024 * 16)
 extern "C" void odin_startup_runtime(void*,int);
 
 int main(void) {
