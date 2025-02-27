@@ -18,8 +18,8 @@ include:
   #  file: '/windows-x64-mingw.yml'
 
   # Windows msvc10 64-bit
-  #- project: 'libretro-infrastructure/ci-templates'
-  #  file: '/windows-x64-msvc10-msys2.yml'
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/windows-x64-msvc10-msys2.yml'
 
   # Linux 64-bit
   - project: 'libretro-infrastructure/ci-templates'
@@ -68,13 +68,14 @@ stages:
 #    - .core-defs
 
 # Windows msvc10 64-bit
-#libretro-build-windows-msvc10-x64:
-#  only:
-#    - edge
-#    - release
-#  extends:
-#    - .libretro-windows-x64-msvc10-msys2-make-default
-#    - .core-defs
+libretro-build-windows-msvc10-x64:
+  only:
+    - develop
+    - edge
+    - release
+  extends:
+    - .libretro-windows-x64-msvc10-msys2-make-default
+    - .core-defs
 
 # Linux 64-bit
 libretro-build-linux-x64:

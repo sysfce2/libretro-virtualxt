@@ -4,6 +4,7 @@ ODIN_VERSION   := dev-2025-02
 TARGET_NAME    := virtualxt
 CORE_DIR       := ../../../
 ODIN_UNPACK    := unzip odin.zip
+ODIN_MKTARGET  := object
 
 ifneq ($(V),1)
    Q := @
@@ -150,30 +151,11 @@ else ifeq ($(platform), emscripten)
    ODIN_TARGET = freestanding_wasm32
    ODIN_FLAGS = -reloc-mode:pic
 else ifneq (,$(findstring msvc,$(platform)))
-   CC = cl.exe
-   LDFLAGS += -DLL
-   OBJ_EXT = obj
+   TARGET := $(TARGET_NAME)_libretro.dll
    ODIN_TARGET = windows_amd64
+   ODIN_MKTARGET = release
    ODIN_UNPACK = powershell -command "Expand-Archive -Force odin.zip ."
-
-   PATH := $(shell IFS=$$'\n'; cygpath "$(VS100COMNTOOLS)../../VC/bin/amd64"):$(PATH)
-   PATH := $(PATH):$(shell IFS=$$'\n'; cygpath "$(VS100COMNTOOLS)../IDE")
-   LIB := $(shell IFS=$$'\n'; cygpath "$(VS100COMNTOOLS)../../VC/lib/amd64")
-
-   WindowsSdkDir := $(shell reg query "HKLM\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v7.1A" -v "InstallationFolder" | grep -o '[A-Z]:\\.*')
-   WindowsSdkDir ?= $(shell reg query "HKLM\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v7.0A" -v "InstallationFolder" | grep -o '[A-Z]:\\.*')
-
-   WindowsSDKLibDir := $(shell cygpath -w "$(WindowsSdkDir)\Lib\x64")
-   export LIB := $(LIB);$(WindowsSDKLibDir)
-   
-   ifeq ($(STATIC_LINKING), 1)
-     TARGET := $(TARGET_NAME)_libretro.lib
-   	 AR = lib.exe
-   else
-     TARGET := $(TARGET_NAME)_libretro.dll
-     LDFLAGS += kernel32.lib msvcrt.lib
-     LD = link.exe
-   endif
+   STATIC_LINKING=0
 else
    TARGET := $(TARGET_NAME)_libretro.dll
    SHARED := -shared -static-libgcc -s -Wl,--no-undefined
@@ -194,18 +176,18 @@ setup:
 	curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/$(ODIN_VERSION)/odin-$(system_odin)-$(ODIN_VERSION).zip && $(ODIN_UNPACK)
 
 $(OBJECTS): setup
-	PATH="$(PATH):$(MKPATH)/odin-$(system_odin)-$(ODIN_VERSION)" ODIN_TARGET=$(ODIN_TARGET) ODIN_FLAGS="$(ODIN_FLAGS)" ODIN_VET= $(MAKE) -C $(CORE_DIR) object
+	PATH="$(PATH):$(MKPATH)/odin-$(system_odin)-$(ODIN_VERSION)" ODIN_TARGET=$(ODIN_TARGET) ODIN_FLAGS="$(ODIN_FLAGS)" ODIN_VET= $(MAKE) -C $(CORE_DIR) $(ODIN_MKTARGET)
 
 $(TARGET): $(OBJECTS)
+ifneq ($(ODIN_MKTARGET),object)
+	cp $(CORE_DIR)$(TARGET) $@
+else
 ifeq ($(STATIC_LINKING), 1)
-	ifneq (,$(findstring msvc,$(platform)))
-		$(AR) -out:$@ $(OBJECTS)
-	else
-		$(AR) rcs $@ $(OBJECTS)
-	endif
+	$(AR) rcs $@ $(OBJECTS)
 else
 	@$(if $(Q), $(shell echo echo LD $@),)
 	$(Q)$(CC) $(fpic) $(SHARED) -o $@ $(CORE_DIR)$(OBJECTS) $(LDFLAGS)
+endif
 endif
 
 clean:
