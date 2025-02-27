@@ -31,7 +31,7 @@ COLLECTIONS= \
 
 TEST_DATA= \
 	src/tests/opcodes.odin \
-	src/tests/testdata/8088.json \
+	src/tests/testdata/metadata.json \
 	src/tests/testdata/*.json \
 	src/tests/testdata/*.json.gz
 

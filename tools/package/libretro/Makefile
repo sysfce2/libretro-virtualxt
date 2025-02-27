@@ -153,7 +153,7 @@ else ifeq ($(platform), emscripten)
    ODIN_FLAGS = -reloc-mode:pic
 else ifneq (,$(findstring msvc,$(platform)))
    TARGET := $(TARGET_NAME)_libretro.dll
-   ODIN_TARGET = windows_amd64
+   ODIN_FLAGS += -target:windows_amd64
    ODIN_MKTARGET = release
    ODIN_UNPACK = powershell -command "Expand-Archive -Force odin.zip ."
    STATIC_LINKING=0
@@ -184,7 +184,7 @@ ifneq ($(ODIN_MKTARGET),object)
 	cp $(CORE_DIR)$(TARGET) $@
 else
 ifeq ($(STATIC_LINKING), 1)
-	$(AR) rcs $@ $(OBJECTS)
+	$(AR) rcs $@ $(CORE_DIR)$(OBJECTS)
 else
 	@$(if $(Q), $(shell echo echo LD $@),)
 	$(Q)$(CC) $(fpic) $(SHARED) -o $@ $(CORE_DIR)$(OBJECTS) $(LDFLAGS)
