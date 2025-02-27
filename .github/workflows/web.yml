@@ -61,7 +61,12 @@ jobs:
           cd RetroArch
           source ../emsdk/emsdk_env.sh && emmake make -f Makefile.emscripten LIBRETRO=virtualxt -j all
           cp virtualxt_libretro.{js,wasm} pkg/emscripten/libretro
-          cp -r ../retroarch/assets pkg/emscripten/libretro
+          mkdir -p pkg/emscripten/libretro/assets/cores/virtualxt
+          cp -r ../retroarch/assets/frontend pkg/emscripten/libretro/assets
+
+      #- name: Content
+      #  run: |
+      #    echo >> pkg/emscripten/libretro/assets/cores/virtualxt/.index
           
       - name: Deploy
         env:
