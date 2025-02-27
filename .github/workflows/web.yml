@@ -31,15 +31,21 @@ jobs:
           sudo apt-get install lld
           rm -rf odin; mkdir odin
           curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-linux-amd64-${ODIN_VERSION}.zip && unzip odin.zip
+          curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default && unzip butler.zip -d butler
+          echo "${GITHUB_WORKSPACE}/butler" >> $GITHUB_PATH
           echo "${GITHUB_WORKSPACE}/odin-linux-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
+          
+      - name: Setup (RetroArch)
+        run: |
           git clone https://github.com/libretro/RetroArch
-          git clone https://github.com/emscripten-core/emsdk
-
+          curl -L -o RetroArch.7z https://buildbot.libretro.com/nightly/emscripten/RetroArch.7z && 7z x RetroArch.7z
+          
       - name: Setup (Emscripten)
         run: |
+          git clone https://github.com/emscripten-core/emsdk
           cd emsdk
           ./emsdk install 3.1.46
-          ./emsdk activate 3.1.46          
+          ./emsdk activate 3.1.46
 
       - name: Test
         run: make tests
@@ -55,12 +61,7 @@ jobs:
           cd RetroArch
           source ../emsdk/emsdk_env.sh && emmake make -f Makefile.emscripten LIBRETRO=virtualxt -j all
           cp virtualxt_libretro.{js,wasm} pkg/emscripten/libretro
-
-      - name: Assets (RetroArch)
-        run: |
-           curl -L -o RetroArch.7z https://buildbot.libretro.com/nightly/emscripten/RetroArch.7z
-           7z x RetroArch.7z
-           cp -r retroarch/assets RetroArch/pkg/emscripten/libretro
+          cp -r ../retroarch/assets pkg/emscripten/libretro
           
       - name: Deploy
         env:
@@ -68,5 +69,5 @@ jobs:
         run: |
           if [[ $GITHUB_REF_NAME =~ ^(release|develop)$ ]]; then
             butler login
-            butler push RetroArch/pkg/emscripten/libretro phix/virtualxt:web-${GITHUB_REF_NAME} --userversion ${VXT_VERSION}-${GITHUB_RUN_ID}
+            butler push RetroArch/pkg/emscripten/libretro phix/virtualxt:web-odin-${GITHUB_REF_NAME} --userversion ${VXT_VERSION}-${GITHUB_RUN_ID}
           fi
