@@ -225,6 +225,7 @@ config :: proc(disk: ^Disk, name, key: string, value: any) -> bool {
 		if drive := &disk.drives[num]; drive.fp != nil {
 			disk.vfs.close(drive.fp)
 			drive^ = Drive{}
+			disk.num_fd -= 1
 		} else {
 			log.warn("No drive mounted!")
 		}
