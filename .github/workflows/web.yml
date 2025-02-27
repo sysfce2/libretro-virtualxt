@@ -32,22 +32,41 @@ jobs:
           rm -rf odin; mkdir odin
           curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-linux-amd64-${ODIN_VERSION}.zip && unzip odin.zip
           echo "${GITHUB_WORKSPACE}/odin-linux-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
+          git clone https://github.com/libretro/RetroArch
+          git clone https://github.com/emscripten-core/emsdk
+
+      - name: Setup (Emscripten)
+        run: |
+          cd emsdk
+          ./emsdk install 3.1.46
+          ./emsdk activate 3.1.46          
 
       - name: Test
         run: make tests
 
-      - name: Build
-        run: make wasm
+      - name: Build (VirtualXT)
+        run: |
+          ODIN_TARGET=freestanding_wasm32 make object
+          source emsdk/emsdk_env.sh && emar rcs virtualxt_libretro_emscripten.bc virtualxt_libretro.wasm.o          
 
+      - name: Build (RetroArch)
+        run: |
+          cp virtualxt_libretro_emscripten.bc RetroArch/libretro_emscripten.bc
+          cd RetroArch
+          source ../emsdk/emsdk_env.sh && emmake make -f Makefile.emscripten LIBRETRO=virtualxt -j all
+          cp virtualxt_libretro.{js,wasm} pkg/emscripten/libretro
+
+      - name: Assets (RetroArch)
+        run: |
+           curl -L -o RetroArch.7z https://buildbot.libretro.com/nightly/emscripten/RetroArch.7z
+           7z x RetroArch.7z
+           cp -r retroarch/assets RetroArch/pkg/emscripten/libretro
+          
       - name: Deploy
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          if [[ $GITHUB_REF_NAME =~ ^(release)$ ]]; then
-            PACKAGE="${GITHUB_WORKSPACE}/package"
-            rm -rf $PACKAGE
-            mkdir $PACKAGE
-            cp virtualxt_libretro.so $PACKAGE
+          if [[ $GITHUB_REF_NAME =~ ^(release|develop)$ ]]; then
             butler login
-            butler push $PACKAGE phix/virtualxt:web-${GITHUB_REF_NAME} --userversion ${VXT_VERSION}-${GITHUB_RUN_ID}
+            butler push RetroArch/pkg/emscripten/libretro phix/virtualxt:web-${GITHUB_REF_NAME} --userversion ${VXT_VERSION}-${GITHUB_RUN_ID}
           fi
