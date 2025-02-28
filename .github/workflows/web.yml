@@ -2,8 +2,6 @@ name: Web
 
 on:
   push:
-    branches: [ "develop", "edge", "release" ]
-  pull_request:
     branches: [ "develop" ]
 
   workflow_dispatch:
@@ -11,7 +9,7 @@ on:
 env:
   VXT_VERSION: 1.3.0
   ODIN_VERSION: dev-2025-02
-  CONTENT: "svardos.img svardos_hd.img elks_hd.img"
+  ITCH_CONTENT: "svardos.img svardos_hd.img elks_hd.img"
 
 jobs:
   web-build:
@@ -70,7 +68,7 @@ jobs:
       - name: Content
         run: |
           CONTENT_DEST=RetroArch/pkg/emscripten/libretro/assets/cores/VirtualXT
-          for FILE in ${CONTENT}; do
+          for FILE in ${ITCH_CONTENT}; do
             cp boot/${FILE} ${CONTENT_DEST}
             echo ${FILE} >> ${CONTENT_DEST}/.index
           done
@@ -80,21 +78,21 @@ jobs:
           chmod +x indexer
           cd assets/cores
           ../../indexer > .index-xhr
-          
-      #- name: Deploy
-      #  env:
-      #    BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-      #  run: |
-      #    if [[ $GITHUB_REF_NAME =~ ^(edge)$ ]]; then
-      #      butler login
-      #      butler push RetroArch/pkg/emscripten/libretro phix/virtualxt:web-${GITHUB_REF_NAME} --userversion ${VXT_VERSION}-${GITHUB_RUN_ID}
-      #    fi
 
-      - name: Deploy2
+      - name: Deploy (itch.io)
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          if [[ $GITHUB_REF_NAME =~ ^(develop)$ ]]; then
-            butler login
-            butler push RetroArch/pkg/emscripten/libretro phix/web-test:web-odin-${GITHUB_REF_NAME} --userversion ${VXT_VERSION}-${GITHUB_RUN_ID}
-          fi
+          butler login
+          butler push RetroArch/pkg/emscripten/libretro phix/web-test:web-${GITHUB_REF_NAME} --userversion ${VXT_VERSION}-${GITHUB_RUN_ID}
+
+      - name: Build (Pages)
+        run: |
+          cp tools/icon/icon.ico RetroArch/pkg/emscripten/libretro/favicon.ico
+          echo -n app.virtualxt.org > RetroArch/pkg/emscripten/libretro/CNAME
+
+      - name: Deploy (Pages)
+        uses: JamesIves/github-pages-deploy-action@4.1.6
+        with:
+          branch: gh-pages
+          folder: RetroArch/pkg/emscripten/libretro
