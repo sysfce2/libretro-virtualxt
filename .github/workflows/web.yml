@@ -66,7 +66,7 @@ jobs:
 
       - name: Content
         run: |
-          CONTENT_DEST=pkg/emscripten/libretro/assets/cores/virtualxt
+          CONTENT_DEST=RetroArch/pkg/emscripten/libretro/assets/cores/virtualxt
           CONTENT="svardos.img svardos_hd.img elks_hd.img"
           for FILE in ${CONTENT}; do
             cp boot/${FILE} ${CONTENT_DEST}
