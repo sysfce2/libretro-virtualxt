@@ -65,6 +65,7 @@ jobs:
           mkdir -p pkg/emscripten/libretro/assets/cores/VirtualXT
           cp -r ../retroarch/assets/frontend pkg/emscripten/libretro/assets
           cp -r ../retroarch/media pkg/emscripten/libretro
+          cp ../tools/icon/canvas.png pkg/emscripten/libretro/media
 
       - name: Content
         run: |
