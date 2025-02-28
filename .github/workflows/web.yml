@@ -80,11 +80,20 @@ jobs:
           cd assets/cores
           ../../indexer > .index-xhr
           
-      - name: Deploy
+      #- name: Deploy
+      #  env:
+      #    BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+      #  run: |
+      #    if [[ $GITHUB_REF_NAME =~ ^(edge)$ ]]; then
+      #      butler login
+      #      butler push RetroArch/pkg/emscripten/libretro phix/virtualxt:web-${GITHUB_REF_NAME} --userversion ${VXT_VERSION}-${GITHUB_RUN_ID}
+      #    fi
+
+      - name: Deploy2
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          if [[ $GITHUB_REF_NAME =~ ^(release|develop)$ ]]; then
+          if [[ $GITHUB_REF_NAME =~ ^(develop)$ ]]; then
             butler login
-            butler push RetroArch/pkg/emscripten/libretro phix/virtualxt:web-odin-${GITHUB_REF_NAME} --userversion ${VXT_VERSION}-${GITHUB_RUN_ID}
+            butler push RetroArch/pkg/emscripten/libretro phix/web-test:web-odin-${GITHUB_REF_NAME} --userversion ${VXT_VERSION}-${GITHUB_RUN_ID}
           fi
