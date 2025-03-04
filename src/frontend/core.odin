@@ -27,13 +27,14 @@ import "core:log"
 import "core:strings"
 import "core:time"
 
-import "modules:vga"
 import "modules:cga"
 import "modules:chipset"
 import "modules:disk"
+import "modules:ems"
 import "modules:gdb"
 import "modules:rom"
-import "modules:ems"
+import "modules:vga"
+import "modules:mouse"
 
 import retro "vxt:frontend/libretro"
 import "vxt:machine"
@@ -193,7 +194,7 @@ retro_set_environment :: proc "c" (cb: retro.environment_t) {
 			case .Error, .Fatal:
 				lv = .LOG_ERROR
 			}
-			
+
 			builder := strings.builder_from_bytes(log_buffer[:])
 			strings.write_string(&builder, text)
 			log_buffer[LOG_BUFFER_SIZE - 1] = 0 // Ensure we always are terminated.
@@ -265,7 +266,7 @@ setup_machine :: proc(info: ^retro.game_info) {
 		configure("vgabios", "name", "VGA BIOS")
 		configure("vgabios", "base", u32(0xC0000))
 		configure("vgabios", "mem", #load("bios:vgabios.bin", []byte))
-		
+
 		vga.create()
 		configure("vga", "framebuffer", frame_buffer.memory[:])
 		configure("vga", "modeset_callback", set_framebuffer_size)
@@ -274,7 +275,10 @@ setup_machine :: proc(info: ^retro.game_info) {
 		configure("cga", "framebuffer", frame_buffer.memory[:])
 		configure("cga", "modeset_callback", set_framebuffer_size)
 	}
-	
+
+	mouse.create()
+	configure("mouse", "set_input_state_callback", retro_callbacks.input_state)
+
 	chipset.create()
 
 	if enable_ems {

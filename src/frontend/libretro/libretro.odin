@@ -66,6 +66,14 @@ VFS_SEEK_POSITION_START 				:: 0
 VFS_SEEK_POSITION_CURRENT 				:: 1
 VFS_SEEK_POSITION_END 					:: 2
 
+DEVICE_ID_MOUSE_X 		:: 0
+DEVICE_ID_MOUSE_Y 		:: 1
+DEVICE_ID_MOUSE_LEFT 	:: 2
+DEVICE_ID_MOUSE_RIGHT 	:: 3
+
+DEVICE_MOUSE 		:: 2
+DEVICE_KEYBOARD 	:: 3
+
 environment_t :: #type proc "c" (cmd: c.uint, data: rawptr) -> c.bool
 log_printf_t :: #type proc "c" (level: log_level, fmt: cstring, #c_vararg args: ..any)
 audio_sample_t :: #type proc "c" (left, right: c.int16_t)
