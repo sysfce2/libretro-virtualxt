@@ -72,9 +72,13 @@ vxtpkt: tools/drivers/vxtpkt/vxtpkt.asm
 testdata:
 	(cd src/tests/testdata && ./download.py)
 
+testbin:
+	odin build src/tests -build-mode:test -debug -define:ODIN_TEST_THREADS=1 -define:ODIN_TEST_SHORT_LOGS=true -define:ODIN_TEST_LOG_LEVEL=error -o:speed $(ODIN_VET) $(COLLECTIONS)
+
 .PHONY: tests
-tests:
-	odin test src/tests -define:ODIN_TEST_THREADS=1 -define:ODIN_TEST_SHORT_LOGS=true -define:ODIN_TEST_LOG_LEVEL=error -o:speed $(ODIN_VET) $(COLLECTIONS)
+tests: testbin
+	./tests
+	@rm -f tests
 
 clean:
 	rm -f *.o *.obj *.so *.dll *.dylib *.wasm *.lst *.sys *.com
