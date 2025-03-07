@@ -2,9 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [ "edge", "release" ]
-  pull_request:
-    branches: [ "develop" ]
+    branches: [ "edge", "release", "cbor" ]
   schedule:
     - cron: '0 0 * * SUN'
 

@@ -66,5 +66,6 @@ dkms.conf
 /tools/webplayer/*.img
 
 /src/tests/testdata/*.json*
+/src/tests/testdata/*.cbor
 /src/tests/opcodes.odin
 /tests

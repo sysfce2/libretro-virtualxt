@@ -5,6 +5,7 @@ import json
 import os
 import requests
 import shutil
+from cbor2 import dump
 
 test_8088 = "https://github.com/virtualxt/8088/raw/main/v2/"
 test_V20 = "https://github.com/virtualxt/v20/raw/main/v1_native/"
@@ -20,7 +21,7 @@ import "core:testing"
 test_case = """
 @(test)
 opcode_{sym_name} :: proc(t: ^testing.T) {{
-	run_opcode_tests(t, "src/tests/testdata/{file_name}.json", transmute(Flags)u16({flags_mask}))
+	run_opcode_tests(t, "src/tests/testdata/{file_name}.cbor", transmute(Flags)u16({flags_mask}))
 }}
 """
 
@@ -74,19 +75,19 @@ def unpack_test(name, status):
     if status in ["undefined", "prefix", "fpu", "undocumented", "alias"]:
         return False
 
-    json_name = name + ".json"
-    gz_name = json_name + ".gz"
+    cbor_name = name + ".cbor"
+    gz_name = name + ".json.gz"
     
-    if os.path.exists(json_name):
+    if os.path.exists(cbor_name):
         return True
     
     if not check_and_download(gz_name):
         return False
 
-    print("Unpacking: " + gz_name)
+    print("Unpacking: {} -> {}".format(gz_name, cbor_name))
     with gzip.open(gz_name, "rb") as f_in:
-        with open(json_name, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+        with open(cbor_name, "wb") as f_out:
+            dump(json.loads(f_in.read()), f_out)
 
     return True
 

@@ -32,7 +32,7 @@ COLLECTIONS= \
 TEST_DATA= \
 	src/tests/opcodes.odin \
 	src/tests/testdata/metadata.json \
-	src/tests/testdata/*.json \
+	src/tests/testdata/*.cbor \
 	src/tests/testdata/*.json.gz
 
 ODIN_VET?=-vet-semicolon -vet-shadowing -vet-style -vet-tabs -vet-unused
