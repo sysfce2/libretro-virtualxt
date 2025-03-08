@@ -1,50 +1,52 @@
 name: Tests
 
 on:
-  push:
-    branches: [ "edge", "release", "cbor" ]
-  schedule:
-    - cron: '0 0 * * SUN'
+    push:
+        branches: ["edge", "release"]
+    pull_request:
+        branches: ["develop"]
+    schedule:
+        - cron: "0 0 * * SUN"
 
-  workflow_dispatch:
+    workflow_dispatch:
 
 concurrency:
-  group: ${{ github.head_ref || github.ref_name }}
-  cancel-in-progress: true
+    group: ${{ github.head_ref || github.ref_name }}
+    cancel-in-progress: true
 
 env:
-  ODIN_VERSION: dev-2025-02
+    ODIN_VERSION: dev-2025-02
 
 jobs:
-  linux-tests:
-    name: Tests
-    runs-on: ubuntu-22.04
-    timeout-minutes: 180
+    linux-tests:
+        name: Tests
+        runs-on: ubuntu-22.04
+        timeout-minutes: 180
 
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  submodules: recursive
 
-      - name: Setup
-        run: |
-          sudo apt-get update
-          sudo apt-get install kcov
-          pip install cbor2
-          rm -rf odin; mkdir odin
-          curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-linux-amd64-${ODIN_VERSION}.zip && unzip odin.zip
-          echo "${GITHUB_WORKSPACE}/odin-linux-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
+            - name: Setup
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install kcov
+                  pip install cbor2
+                  rm -rf odin; mkdir odin
+                  curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-linux-amd64-${ODIN_VERSION}.zip && unzip odin.zip
+                  echo "${GITHUB_WORKSPACE}/odin-linux-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
 
-      - name: Generate
-        run: make testdata
-        
-      - name: Build
-        run: make testbin
-        
-      - name: Test
-        run: kcov --include-path=src --exclude-path=src/frontend/libretro,src/tests kcov-out ./tests .
+            - name: Generate
+              run: make testdata
 
-      - name: Report
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: bash <(curl -s https://codecov.io/bash) -s kcov-out
+            - name: Build
+              run: make testbin
+
+            - name: Test
+              run: kcov --include-path=src --exclude-path=src/frontend/libretro,src/tests kcov-out ./tests .
+
+            - name: Report
+              env:
+                  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+              run: bash <(curl -s https://codecov.io/bash) -s kcov-out
