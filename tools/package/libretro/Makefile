@@ -1,6 +1,6 @@
 STATIC_LINKING := 0
 AR             := ar
-ODIN_VERSION   := dev-2025-03
+ODIN_VERSION   := dev-2025-02
 TARGET_NAME    := virtualxt
 CORE_DIR       := ../../../
 ODIN_UNPACK    := unzip odin.zip

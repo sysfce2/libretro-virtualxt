@@ -8,7 +8,7 @@ on:
 
 env:
     VXT_VERSION: 1.3.0
-    ODIN_VERSION: dev-2025-03
+    ODIN_VERSION: dev-2025-02
     ITCH_CONTENT: "svardos.img svardos_hd.img elks_hd.img"
 
 jobs:
