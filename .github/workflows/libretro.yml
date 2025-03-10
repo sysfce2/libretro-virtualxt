@@ -30,9 +30,9 @@ jobs:
               run: |
                   rm -rf odin; mkdir odin
                   curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default && unzip butler.zip -d butler
-                  curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-linux-amd64-${ODIN_VERSION}.zip && unzip odin.zip
+                  curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-ubuntu-amd64-${ODIN_VERSION}.zip && unzip odin.zip
                   echo "${GITHUB_WORKSPACE}/butler" >> $GITHUB_PATH
-                  echo "${GITHUB_WORKSPACE}/odin-linux-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
+                  echo "${GITHUB_WORKSPACE}/odin-ubuntu-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
 
             - name: Test
               run: make tests
@@ -192,9 +192,9 @@ jobs:
                   rm -rf odin; mkdir odin
                   curl -L -o ndk.zip https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip && unzip ndk.zip
                   curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default && unzip butler.zip -d butler
-                  curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-linux-amd64-${ODIN_VERSION}.zip && unzip odin.zip
+                  curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-ubuntu-amd64-${ODIN_VERSION}.zip && unzip odin.zip
                   echo "${GITHUB_WORKSPACE}/butler" >> $GITHUB_PATH
-                  echo "${GITHUB_WORKSPACE}/odin-linux-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
+                  echo "${GITHUB_WORKSPACE}/odin-ubuntu-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
 
             - name: Test
               run: make tests
@@ -202,7 +202,7 @@ jobs:
             - name: Build
               run: |
                   ODIN_TARGET=freestanding_arm64 ODIN_FLAGS=-reloc-mode:pic make object
-                  "${GITHUB_WORKSPACE}/android-ndk-${NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang" -shared -o virtualxt_libretro.so virtualxt_libretro.o
+                  "${GITHUB_WORKSPACE}/android-ndk-${NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-ubuntu-android21-clang" -shared -o virtualxt_libretro.so virtualxt_libretro.o
 
             - name: Deploy
               env:

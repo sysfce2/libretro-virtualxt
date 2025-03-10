@@ -31,10 +31,10 @@ jobs:
                   curl -L -o circle.zip https://github.com/virtualxt/circle/archive/refs/heads/develop.zip
                   curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default && unzip butler.zip -d butler
                   curl -L -o toolchain.tar.xz https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-elf.tar.xz && tar -xf toolchain.tar.xz
-                  curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-linux-amd64-${ODIN_VERSION}.zip && unzip odin.zip
+                  curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-ubuntu-amd64-${ODIN_VERSION}.zip && unzip odin.zip
                   echo "${GITHUB_WORKSPACE}/butler" >> $GITHUB_PATH
                   echo "${GITHUB_WORKSPACE}/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-elf/bin" >> $GITHUB_PATH
-                  echo "${GITHUB_WORKSPACE}/odin-linux-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
+                  echo "${GITHUB_WORKSPACE}/odin-ubuntu-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
 
             - name: Test
               run: |

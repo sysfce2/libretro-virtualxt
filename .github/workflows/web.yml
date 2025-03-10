@@ -29,10 +29,10 @@ jobs:
                   sudo apt-get update
                   sudo apt-get install lld coffeescript
                   rm -rf odin; mkdir odin
-                  curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-linux-amd64-${ODIN_VERSION}.zip && unzip odin.zip
+                  curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-ubuntu-amd64-${ODIN_VERSION}.zip && unzip odin.zip
                   curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default && unzip butler.zip -d butler
                   echo "${GITHUB_WORKSPACE}/butler" >> $GITHUB_PATH
-                  echo "${GITHUB_WORKSPACE}/odin-linux-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
+                  echo "${GITHUB_WORKSPACE}/odin-ubuntu-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
 
             - name: Setup (RetroArch)
               run: |
