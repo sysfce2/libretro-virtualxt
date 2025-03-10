@@ -34,8 +34,8 @@ jobs:
                   sudo apt-get install kcov
                   pip install cbor2
                   rm -rf odin; mkdir odin
-                  curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-ubuntu-amd64-${ODIN_VERSION}.zip && unzip odin.zip
-                  echo "${GITHUB_WORKSPACE}/odin-ubuntu-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
+                  curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/${ODIN_VERSION}/odin-linux-amd64-${ODIN_VERSION}.zip && unzip odin.zip
+                  echo "${GITHUB_WORKSPACE}/odin-linux-amd64-${ODIN_VERSION}" >> $GITHUB_PATH
 
             - name: Generate
               run: make testdata
