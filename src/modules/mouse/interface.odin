@@ -32,6 +32,7 @@ create :: proc() {
 
 	cb.install = install
 	cb.timer = timer
+	cb.config = config
 	cb.io_in = io_in
 	cb.io_out = io_out
 

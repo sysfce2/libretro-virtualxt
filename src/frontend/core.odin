@@ -32,14 +32,14 @@ import "modules:chipset"
 import "modules:disk"
 import "modules:ems"
 import "modules:gdb"
+import "modules:mouse"
 import "modules:rom"
 import "modules:vga"
-import "modules:mouse"
 
 import retro "vxt:frontend/libretro"
 import retro_callbacks "vxt:frontend/libretro/callbacks"
-import rt "vxt:xruntime"
 import "vxt:machine"
+import rt "vxt:xruntime"
 
 VXT_VERSION :: "1.3.0"
 MAX_DISK_IMAGES :: 256
@@ -270,7 +270,6 @@ setup_machine :: proc(info: ^retro.game_info) {
 	}
 
 	mouse.create()
-	configure("mouse", "set_input_state_callback", retro_callbacks.input_state)
 
 	chipset.create()
 	configure("chipset", "set_audio_frequency", uint(AUDIO_FREQUENCY))
