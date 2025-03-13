@@ -100,7 +100,7 @@ io_out :: proc(using mouse: ^Mouse, port: u16, data: byte) {
 timer :: proc(using mouse: ^Mouse, _: peripheral.Peripheral_Timer_ID, _: uint) {
 	if input_state_cb == nil {
 		input_state_cb = retro_callbacks.input_state
-		assert(input_state_cb)
+		assert(input_state_cb != nil)
 	}
 
 	if len(buffer) > MAX_BUFFER_SIZE {

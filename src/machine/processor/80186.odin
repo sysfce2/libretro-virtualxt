@@ -28,14 +28,14 @@ import "vxt:machine/peripheral"
 decode_80186 :: proc() {
 	using state.instruction
 	valid = true
-	
+
 	switch opcode.raw {
 	case 0x60:
 		// PUSHA
 		exec = proc() {
 			using registers
 			r := sp
-			
+
 			stack_push(ax)
 			stack_push(cx)
 			stack_push(dx)
@@ -43,7 +43,7 @@ decode_80186 :: proc() {
 			stack_push(r)
 			stack_push(bp)
 			stack_push(si)
-			stack_push(di)			
+			stack_push(di)
 		}
 	case 0x61:
 		// POPA
@@ -65,7 +65,7 @@ decode_80186 :: proc() {
 			bmin, bmax := load_m1616()
 
 			if (idx < i16(bmin)) || (idx > i16(bmax)) {
-				throw_exception(.BOUND_EXC)
+				trigger_interrupt(.BOUND_INT)
 			}
 		}
 		decode_mod_reg_rm()
@@ -129,7 +129,7 @@ decode_80186 :: proc() {
 		decode_mod_reg_rm()
 		ib = decode_fetch_byte()
 		state.shift_count = ib
-		decode_shift_byte()	
+		decode_shift_byte()
 	case 0xC1:
 		decode_mod_reg_rm()
 		ib = decode_fetch_byte()

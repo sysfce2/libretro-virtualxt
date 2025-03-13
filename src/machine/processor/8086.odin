@@ -122,7 +122,7 @@ decode_8086 :: proc() {
 		// POP CS
 		exec = POP_SR
 		reg_seg = .CODE
-		
+
 		// Not strictly correct but lets flag here so user knows this is unlikely to work.
 		valid = false
 	case 0x10:
@@ -1004,19 +1004,19 @@ decode_8086 :: proc() {
 	case 0xCC:
 		// INT 3 - Debug trap
 		exec = proc() {
-			throw_exception(.DEBUG_TRAP_EXC)
+			trigger_interrupt(.DEBUG_TRAP_INT)
 		}
 	case 0xCD:
 		// INT ib - Interrupt numbered by immediate byte
 		exec = proc() {
-			throw_exception(Exception(state.instruction.ib))
+			trigger_interrupt(Interrupt(state.instruction.ib))
 		}
 		ib = decode_fetch_byte()
 	case 0xCE:
 		// INTO - Overflow
 		exec = proc() {
 			if .OVERFLOW in registers.flags {
-				throw_exception(.OVERFLOW_EXC)
+				trigger_interrupt(.OVERFLOW_INT)
 			}
 		}
 	case 0xCF:

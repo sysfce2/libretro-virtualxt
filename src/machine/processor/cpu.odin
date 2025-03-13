@@ -34,12 +34,12 @@ Segment :: enum {
 	DATA,
 }
 
-Exception :: enum byte {
-	DIV_ZERO_EXC   = 0,
-	DEBUG_STEP_EXC = 1,
-	DEBUG_TRAP_EXC = 3,
-	OVERFLOW_EXC   = 4,
-	BOUND_EXC      = 5,
+Interrupt :: enum byte {
+	DIV_ZERO_INT   = 0,
+	DEBUG_STEP_INT = 1,
+	DEBUG_TRAP_INT = 3,
+	OVERFLOW_INT   = 4,
+	BOUND_INT      = 5,
 }
 
 Opcode :: struct #raw_union {
@@ -56,9 +56,9 @@ Instruction :: struct {
 	opcode:     Opcode,
 	mode:       Mod_Reg_Rm,
 	stream:     struct {
-		data: [MAX_INSTRUCTION_SIZE]byte,
-		size: uint,
-		addr: u32,
+		data:      [MAX_INSTRUCTION_SIZE]byte,
+		size:      uint,
+		addr:      u32,
 		ip, op_ip: u16,
 	},
 	ea_offset:  u16,
@@ -74,12 +74,12 @@ registers: peripheral.Peripheral_CPU_Registers
 interrupt_controler: ^peripheral.Peripheral_Callbacks(peripheral.Peripheral)
 
 state: struct {
-	instruction:      			Instruction,
-	base_ds, base_ss: 			Segment,
-	shift_count:      			byte,
-	halt, trap:   				bool,
-	invert_quotient, div_zero:  bool,
-	reserved:                   peripheral.Peripheral_CPU_Flags,
+	instruction:               Instruction,
+	base_ds, base_ss:          Segment,
+	shift_count:               byte,
+	halt, trap:                bool,
+	invert_quotient, div_zero: bool,
+	reserved:                  peripheral.Peripheral_CPU_Flags,
 }
 
 check_interrupts :: proc() {
@@ -88,14 +88,14 @@ check_interrupts :: proc() {
 
 	if trap && !state.trap {
 		state.trap = interrupt
-		throw_exception(.DEBUG_STEP_EXC)
+		trigger_interrupt(.DEBUG_STEP_INT)
 	} else if interrupt {
 		state.halt = false
 		state.trap = false
 
 		if interrupt_controler != nil {
 			if n := interrupt_controler.pic.next(peripheral.get_peripheral(interrupt_controler)); n >= 0 {
-				throw_exception(Exception(n))
+				trigger_interrupt(Interrupt(n))
 			}
 		}
 	}
@@ -308,7 +308,7 @@ update_si_di_direction :: proc(step: u16) {
 	}
 }
 
-throw_exception :: proc(e: Exception) {
+trigger_interrupt :: proc(e: Interrupt) {
 	using registers, state.instruction
 
 	read_word :: proc(addr: u32) -> u16 {
@@ -325,8 +325,8 @@ throw_exception :: proc(e: Exception) {
 	} else {
 		stack_push(ip)
 	}
-	
-	if e == .DIV_ZERO_EXC {
+
+	if e == .DIV_ZERO_INT {
 		state.div_zero = true
 	}
 

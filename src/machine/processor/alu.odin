@@ -298,10 +298,10 @@ AAM :: proc() {
 
 	if ib == 0 {
 		// The juggling with the flags here is just to make the tests happy.
-		flags &= { .RESERVED_0, .RESERVED_1, .RESERVED_2, .TRAP, .INTERRUPT, .DIRECTION, .RESERVED_3, .RESERVED_4, .RESERVED_5, .RESERVED_6 }
-		flags += { .PARITY, .ZERO }
+		flags &= {.RESERVED_0, .RESERVED_1, .RESERVED_2, .TRAP, .INTERRUPT, .DIRECTION, .RESERVED_3, .RESERVED_4, .RESERVED_5, .RESERVED_6}
+		flags += {.PARITY, .ZERO}
 
-		throw_exception(.DIV_ZERO_EXC)
+		trigger_interrupt(.DIV_ZERO_INT)
 		return
 	}
 
@@ -366,7 +366,7 @@ IMUL_w :: proc(a, b: u16) -> u16 {
 DIV_eb :: proc() {
 	v := u16(load_eb())
 	if v == 0 {
-		throw_exception(.DIV_ZERO_EXC)
+		trigger_interrupt(.DIV_ZERO_INT)
 		return
 	}
 
@@ -376,7 +376,7 @@ DIV_eb :: proc() {
 	q8 := q & 0xFF
 
 	if q != q8 {
-		throw_exception(.DIV_ZERO_EXC)
+		trigger_interrupt(.DIV_ZERO_INT)
 		return
 	}
 
@@ -387,7 +387,7 @@ DIV_eb :: proc() {
 DIV_ew :: proc() {
 	v := u32(load_ew())
 	if v == 0 {
-		throw_exception(.DIV_ZERO_EXC)
+		trigger_interrupt(.DIV_ZERO_INT)
 		return
 	}
 
@@ -397,7 +397,7 @@ DIV_ew :: proc() {
 	q16 := q & 0xFFFF
 
 	if q != q16 {
-		throw_exception(.DIV_ZERO_EXC)
+		trigger_interrupt(.DIV_ZERO_INT)
 		return
 	}
 
@@ -410,24 +410,24 @@ IDIV_eb :: proc() {
 
 	a := i16(ax)
 	if a == transmute(i16)u16(0x8000) {
-		throw_exception(.DIV_ZERO_EXC)
+		trigger_interrupt(.DIV_ZERO_INT)
 		return
 	}
 
 	v := i16(load_eb())
 	if v == 0 {
-		throw_exception(.DIV_ZERO_EXC)
+		trigger_interrupt(.DIV_ZERO_INT)
 		return
 	}
 
 	q16 := a / v
 	q16 *= state.invert_quotient ? -1 : 1 // This is 8088 specific.
-	
+
 	r8 := i8(a % v)
 	q8 := i8(q16 & 0xFF)
 
 	if q16 != i16(q8) {
-		throw_exception(.DIV_ZERO_EXC)
+		trigger_interrupt(.DIV_ZERO_INT)
 		return
 	}
 
@@ -440,24 +440,24 @@ IDIV_ew :: proc() {
 
 	a := i32((u32(dx) << 16) | u32(ax))
 	if a == transmute(i32)u32(0x80000000) {
-		throw_exception(.DIV_ZERO_EXC)
+		trigger_interrupt(.DIV_ZERO_INT)
 		return
 	}
 
 	v := i32(load_ew())
 	if v == 0 {
-		throw_exception(.DIV_ZERO_EXC)
+		trigger_interrupt(.DIV_ZERO_INT)
 		return
 	}
 
 	q32 := a / v
 	q32 *= state.invert_quotient ? -1 : 1 // This is 8088 specific.
-	
+
 	r16 := i16(a % v)
 	q16 := i16(q32 & 0xFFFF)
 
 	if q32 != i32(q16) {
-		throw_exception(.DIV_ZERO_EXC)
+		trigger_interrupt(.DIV_ZERO_INT)
 		return
 	}
 
