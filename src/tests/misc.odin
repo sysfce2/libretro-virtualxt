@@ -22,8 +22,9 @@
 package tests
 
 import "core:testing"
-import "modules:rom"
 import "vxt:machine"
+
+@(require) import "modules:rom"
 
 @(test)
 cpu_registers :: proc(t: ^testing.T) {
