@@ -23,6 +23,7 @@ package frontend
 
 import "base:runtime"
 import "core:c"
+import "core:encoding/ini"
 import "core:log"
 import "core:strings"
 import "core:time"
@@ -211,14 +212,50 @@ retro_reset :: proc "c" () {
 }
 
 setup_machine_config :: proc(config_path: string) -> bool {
-	return false
+	using machine
+
+	config, _ := ini.load_map_from_path(config_path, context.temp_allocator) or_return
+	version := config["virtualxt"]["version"] or_return
+	if version != VXT_VERSION {
+		return false
+	}
+
+	for section_name, section_data in config {
+		if section_name == "virtualxt" {
+			continue
+		}
+
+		if mod_name, ok := section_data["module"]; ok {
+			instantiate(mod_name, section_name)
+		}
+
+		for k, v in section_data {
+			if k == "module" {
+				continue
+			} else if !configure(section_name, k, v) {
+				log.errorf("Configuration failed: [%s] %s=%s", section_name, k, v)
+				return false
+			}
+		}
+	}
+
+	set_framebuffer_size :: proc(w, h: uint) {
+		frame_buffer.width = w
+		frame_buffer.height = h
+	}
+
+	configure("cga", "framebuffer", frame_buffer.memory[:])
+	configure("vga", "framebuffer", frame_buffer.memory[:])
+	configure("cga", "modeset_callback", set_framebuffer_size)
+	configure("vga", "modeset_callback", set_framebuffer_size)
+
+	configure("chipset", "set_audio_frequency", uint(AUDIO_FREQUENCY))
+
+	return true
 }
 
 setup_default_machine :: proc(info: ^retro.game_info) {
 	using machine
-
-	create()
-	check_variables()
 
 	instantiate("rom", "bios")
 	configure("bios", "name", "BIOS")
@@ -285,10 +322,6 @@ setup_default_machine :: proc(info: ^retro.game_info) {
 		instantiate("gdb")
 		configure("gdb", "halt", gdb_halt)
 	}
-
-	check_variables()
-	initialize(flag_286)
-	print_status()
 }
 
 @(export)
@@ -326,14 +359,27 @@ retro_load_game :: proc "c" (info: ^retro.game_info) -> c.bool {
 		return false
 	}
 
-	frame_buffer.memory = make([dynamic]u32, 720 * 480)
-	if (info != nil) && strings.has_suffix(string(info.path), ".ini") {
-		if !setup_machine_config(string(info.path)) {
-			log.error("Invalid machine configuration!")
-			return false
+	{
+		using machine
+		create()
+		check_variables()
+
+		if len(frame_buffer.memory) == 0 {
+			frame_buffer.memory = make([dynamic]u32, 720 * 480)
 		}
-	} else {
-		setup_default_machine(info)
+
+		if (info != nil) && strings.has_suffix(string(info.path), ".ini") {
+			if !setup_machine_config(string(info.path)) {
+				show_message("Invalid machine configuration!")
+				return false
+			}
+		} else {
+			setup_default_machine(info)
+		}
+
+		check_variables()
+		initialize(flag_286)
+		print_status()
 	}
 
 	show_message("Ensure you have 'Game Focus' mode set to 'Detect' under Setting > Input, or press the 'Scroll Lock' key", 6 * time.Second)

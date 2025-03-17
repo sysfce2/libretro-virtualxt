@@ -26,13 +26,44 @@ package rom
 import "core:log"
 import "core:slice"
 import "core:strconv"
+import "core:strings"
 
+import retro "vxt:frontend/libretro"
+import retro_callbacks "vxt:frontend/libretro/callbacks"
 import "vxt:machine/peripheral"
 
 ROM :: struct {
 	id, name: string,
 	base:     u32,
 	mem:      []byte,
+}
+
+load_from_file :: proc(filename: string) -> (mem: []byte, ok: bool) {
+	cfilename := strings.clone_to_cstring(filename)
+	defer delete(cfilename)
+
+	fp := retro_callbacks.vfs.open(cfilename, retro.VFS_FILE_ACCESS_READ, retro.VFS_FILE_ACCESS_HINT_NONE)
+	if fp == nil {
+		log.errorf("Could not load ROM file: %s", filename)
+		return
+	}
+	defer retro_callbacks.vfs.close(fp)
+
+	file_size := retro_callbacks.vfs.size(fp)
+	if file_size <= 0 {
+		log.errorf("Invalid file size (%vB): %s", file_size, filename)
+		return
+	}
+
+	mem = make([]byte, file_size)
+	if retro_callbacks.vfs.read(fp, &mem[0], u64(file_size)) != file_size {
+		log.errorf("Could not read %vB from: %s", file_size, filename)
+		delete(mem)
+		return
+	}
+
+	ok = true
+	return
 }
 
 config :: proc(rom: ^ROM, name, key: string, value: any) -> bool {
@@ -44,7 +75,14 @@ config :: proc(rom: ^ROM, name, key: string, value: any) -> bool {
 	case "name":
 		rom.name = value.(string)
 	case "mem":
-		rom.mem = slice.clone(value.([]byte))
+		switch v in value {
+		case []byte:
+			rom.mem = slice.clone(v)
+		case string:
+			rom.mem = load_from_file(v) or_return
+		case:
+			return false
+		}
 	case "base":
 		switch v in value {
 		case u32:
@@ -53,6 +91,8 @@ config :: proc(rom: ^ROM, name, key: string, value: any) -> bool {
 			n, ok := strconv.parse_uint(v)
 			assert(ok)
 			rom.base = u32(n)
+		case:
+			return false
 		}
 		assert(rom.base & 0x7FF == 0, "ROM must be 2K aligned")
 	case:

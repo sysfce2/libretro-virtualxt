@@ -28,6 +28,7 @@ import "base:runtime"
 import "core:c"
 import "core:log"
 import "core:os"
+import "core:strconv"
 import "core:time"
 
 import "vxt:machine/peripheral"
@@ -122,7 +123,12 @@ config :: proc(gdb: ^GDB, name, key: string, value: any) -> bool {
 
 	switch key {
 	case "halt":
-		gdb.halt_on_startup = value.(bool)
+		switch v in value {
+		case bool:
+			gdb.halt_on_startup = v
+		case string:
+			gdb.halt_on_startup = strconv.parse_bool(v) or_return
+		}
 	case:
 		return false
 	}

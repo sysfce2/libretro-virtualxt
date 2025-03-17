@@ -24,6 +24,7 @@
 package disk
 
 import "core:log"
+import "core:strconv"
 import "core:strings"
 
 import retro "vxt:frontend/libretro"
@@ -228,7 +229,15 @@ config :: proc(disk: ^Disk, name, key: string, value: any) -> bool {
 			log.warn("No drive mounted!")
 		}
 	case "boot":
-		disk.boot_drive = value.(byte)
+		switch v in value {
+		case byte:
+			disk.boot_drive = v
+		case string:
+			boot := strconv.parse_int(v) or_return
+			disk.boot_drive = byte(boot)
+		case:
+			return false
+		}
 	case "auto":
 		mount_disk(disk, 0xFF, value.(string))
 	case "A":
