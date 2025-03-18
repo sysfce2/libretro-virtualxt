@@ -32,7 +32,7 @@ import retro_callbacks "vxt:frontend/libretro/callbacks"
 import "vxt:machine"
 
 glabios := true
-enable_vga := true
+enable_vga := false
 enable_ems := true
 enable_186 := true
 flag_286 := false
@@ -43,7 +43,7 @@ gdb_server, gdb_halt: bool
 options := [?]retro.variable {
 	{"virtualxt_reset_default_disk", "Reset default disk; false|true"},
 	{"virtualxt_boot_priority", "Boot priority; FD|HD"},
-	{"virtualxt_video", "Video standard; VGA|CGA"},
+	{"virtualxt_video", "Video standard; CGA|VGA"},
 	{"virtualxt_cpu_frequency", "CPU frequency; 4.77MHz|7.15MHz|14.3MHz"},
 	{"virtualxt_186", "186 instructions; true|false"},
 	{"virtualxt_flag_286", "286 flag register; false|true"},
