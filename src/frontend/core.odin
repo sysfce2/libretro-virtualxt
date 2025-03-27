@@ -27,14 +27,7 @@ import "core:log"
 import "core:strings"
 import "core:time"
 
-@(require) import "modules:cga"
-@(require) import "modules:chipset"
-@(require) import "modules:disk"
-@(require) import "modules:ems"
-@(require) import "modules:gdb"
-@(require) import "modules:mouse"
-@(require) import "modules:rom"
-@(require) import "modules:vga"
+@(require) import "vxt:modules"
 
 import retro "vxt:frontend/libretro"
 import retro_callbacks "vxt:frontend/libretro/callbacks"
@@ -231,7 +224,7 @@ setup_machine_config :: proc(config_path: string) -> bool {
 
 	ini_data := make([]byte, file_size)
 	defer delete(ini_data)
-	
+
 	if retro_callbacks.vfs.read(fp, &ini_data[0], u64(file_size)) != file_size {
 		log.errorf("Could not read %vB from: %s", file_size, config_path)
 		return false
@@ -293,6 +286,8 @@ setup_default_machine :: proc(info: ^retro.game_info) {
 	configure("vxtx", "name", "Disk Extension")
 	configure("vxtx", "mem", #load("bios:vxtx.bin", []byte))
 	configure("vxtx", "base", "0xFD800")
+
+	instantiate("rifs2")
 
 	{
 		instantiate("disk")
