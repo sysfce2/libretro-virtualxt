@@ -3,7 +3,7 @@ AR             := ar
 ODIN_VERSION   := dev-2025-04
 TARGET_NAME    := virtualxt
 CORE_DIR       := ../../../
-ODIN_UNPACK    := unzip odin.zip && tar -xf dist.tar.gz -C ./odin --strip-components=1
+ODIN_UNPACK    := mkdir odin && unzip odin.zip && tar -xf dist.tar.gz -C ./odin --strip-components=1
 ODIN_MKTARGET  := object
 
 ifneq ($(V),1)
@@ -177,7 +177,7 @@ setup:
 	curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/$(ODIN_VERSION)/odin-$(system_odin)-$(ODIN_VERSION).zip && $(ODIN_UNPACK)
 
 $(OBJECTS): setup
-	PATH="$(PATH):$(MKPATH)/odin-$(system_odin)-$(ODIN_VERSION)" ODIN_TARGET=$(ODIN_TARGET) ODIN_FLAGS="$(ODIN_FLAGS)" ODIN_VET= $(MAKE) -C $(CORE_DIR) $(ODIN_MKTARGET)
+	PATH="$(PATH):$(MKPATH)/odin" ODIN_TARGET=$(ODIN_TARGET) ODIN_FLAGS="$(ODIN_FLAGS)" ODIN_VET= $(MAKE) -C $(CORE_DIR) $(ODIN_MKTARGET)
 
 $(TARGET): $(OBJECTS)
 ifneq ($(ODIN_MKTARGET),object)
@@ -193,7 +193,7 @@ endif
 
 clean:
 	rm -f $(OBJECTS) $(TARGET) odin.zip
-	rm -rf odin-$(system_odin)-$(ODIN_VERSION)
+	rm -rf odin
 	-$(MAKE) -C $(CORE_DIR) clean
 
 .PHONY: clean
