@@ -37,7 +37,7 @@ jobs:
             - name: Setup (RetroArch)
               run: |
                   git clone -b virtualxt https://github.com/virtualxt/RetroArch
-                  curl -L -o RetroArch.7z https://buildbot.libretro.com/nightly/emscripten/RetroArch.7z && 7z x RetroArch.7z
+                  curl -L -o RetroArch.7z https://buildbot.libretro.com/stable/1.20.0/emscripten/RetroArch.7z && 7z x RetroArch.7z
 
             - name: Setup (Emscripten)
               run: |
