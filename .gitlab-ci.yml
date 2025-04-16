@@ -122,7 +122,8 @@ libretro-build-ios-arm64:
 # Emscripten
 libretro-build-emscripten:
   only:
-    - edge
+    # Need a newer version of emscripten for build 'edge'.
+    #- edge
     - release
   extends:
     - .libretro-emscripten-static-retroarch-master
