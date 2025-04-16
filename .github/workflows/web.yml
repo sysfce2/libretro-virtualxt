@@ -14,7 +14,7 @@ env:
 jobs:
     web-build:
         name: Web
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-latest
 
         steps:
             - uses: actions/checkout@v2
@@ -43,8 +43,8 @@ jobs:
               run: |
                   git clone https://github.com/emscripten-core/emsdk
                   cd emsdk
-                  ./emsdk install 3.1.46
-                  ./emsdk activate 3.1.46
+                  ./emsdk install 3.1.74
+                  ./emsdk activate 3.1.74
 
             - name: Test
               run: make tests
