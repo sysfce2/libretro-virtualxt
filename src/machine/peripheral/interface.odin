@@ -34,10 +34,11 @@ Peripheral_Class :: enum {
 	DEBUGGER = 0x02,
 	PIC      = 0x04,
 	DMA      = 0x08,
-	PPI      = 0x10,
+	PPI      = 0x10 | 0x100, // PPI is also a AUDIO source
 	PIT      = 0x20,
 	UART     = 0x40,
 	VIDEO    = 0x80,
+	AUDIO    = 0x100,
 }
 
 Peripheral_Callbacks :: struct($ty: typeid) {
@@ -123,7 +124,7 @@ get_peripheral :: proc(p: ^Peripheral_Callbacks(Peripheral)) -> ^Peripheral {
 
 get_peripheral_from_class :: proc(class: Peripheral_Class) -> (^Peripheral, ^Peripheral_Callbacks(Peripheral), bool) {
 	for p in peripheral_manager.peripherals {
-		if p.class == class {
+		if (p.class & class) != nil {
 			return get_peripheral(p), p, true
 		}
 	}
