@@ -381,7 +381,7 @@ retro_load_game :: proc "c" (info: ^retro.game_info) -> c.bool {
 		return false
 	}
 
-	vfs_info: retro.vfs_interface_info
+	vfs_info := retro.vfs_interface_info{required_interface_version = 3}
 	if retro_callbacks.environment(retro.ENVIRONMENT_GET_VFS_INTERFACE, &vfs_info) && (vfs_info.iface != nil) {
 		retro_callbacks.vfs = vfs_info.iface
 	} else {

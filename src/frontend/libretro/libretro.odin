@@ -56,15 +56,19 @@ ENVIRONMENT_SET_FRAME_TIME_CALLBACK :: 21
 ENVIRONMENT_SET_AUDIO_CALLBACK :: 22
 ENVIRONMENT_SET_CORE_OPTIONS_V2 :: 67
 
-VFS_FILE_ACCESS_READ :: 1 << 0
-VFS_FILE_ACCESS_WRITE :: 1 << 1
+VFS_FILE_ACCESS_READ :: 1
+VFS_FILE_ACCESS_WRITE :: 2
 VFS_FILE_ACCESS_READ_WRITE :: VFS_FILE_ACCESS_READ | VFS_FILE_ACCESS_WRITE
-VFS_FILE_ACCESS_UPDATE_EXISTING :: 1 << 2
+VFS_FILE_ACCESS_UPDATE_EXISTING :: 4
 VFS_FILE_ACCESS_HINT_NONE :: 0
-VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS :: 1 << 0
+VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS :: 1
 VFS_SEEK_POSITION_START :: 0
 VFS_SEEK_POSITION_CURRENT :: 1
 VFS_SEEK_POSITION_END :: 2
+
+VFS_STAT_IS_VALID :: 1
+VFS_STAT_IS_DIRECTORY :: 2
+VFS_STAT_IS_CHARACTER_SPECIAL :: 4
 
 DEVICE_ID_MOUSE_X :: 0
 DEVICE_ID_MOUSE_Y :: 1
@@ -114,7 +118,20 @@ vfs_flush_t :: #type proc "c" (stream: ^vfs_file_handle) -> c.int
 vfs_remove_t :: #type proc "c" (path: cstring) -> c.int
 vfs_rename_t :: #type proc "c" (old_path, new_path: cstring) -> c.int
 
+vfs_truncate_t :: #type proc "c" (stream: ^vfs_file_handle, length: c.uint64_t) -> c.int64_t
+
+vfs_stat_t :: #type proc "c" (path: cstring, size: ^c.int32_t) -> c.int
+vfs_mkdir_t :: #type proc "c" (dir: cstring) -> c.int
+vfs_opendir_t :: #type proc "c" (dir: cstring, include_hidden: c.bool) -> ^vfs_dir_handle
+vfs_readdir_t :: #type proc "c" (dirstream: ^vfs_dir_handle) -> c.bool
+vfs_dirent_get_name_t :: #type proc "c" (dirstream: ^vfs_dir_handle) -> cstring
+vfs_dirent_is_dir_t :: #type proc "c" (dirstream: ^vfs_dir_handle) -> c.bool
+vfs_closedir_t :: #type proc "c" (dirstream: ^vfs_dir_handle) -> c.int
+
 vfs_file_handle :: struct {
+}
+
+vfs_dir_handle :: struct {
 }
 
 pixel_format :: enum c.int {
@@ -163,8 +180,8 @@ message :: struct {
 	frames: c.uint,
 }
 
-// VFS API v1
 vfs_interface :: struct {
+	// VFS v1
 	get_path: vfs_get_path_t,
 	open:     vfs_open_t,
 	close:    vfs_close_t,
@@ -176,6 +193,18 @@ vfs_interface :: struct {
 	flush:    vfs_flush_t,
 	remove:   vfs_remove_t,
 	rename:   vfs_rename_t,
+
+	// VFS v2
+	truncate: vfs_truncate_t,
+
+	// VFS v3
+	stat: vfs_stat_t,
+	mkdir: vfs_mkdir_t,
+	opendir: vfs_opendir_t,
+	readdir: vfs_readdir_t,
+	dirent_get_name: vfs_dirent_get_name_t,
+	dirent_is_dir: vfs_dirent_is_dir_t,
+	closedir: vfs_closedir_t,
 }
 
 vfs_interface_info :: struct {
