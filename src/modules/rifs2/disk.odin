@@ -24,6 +24,7 @@
 package rifs2
 
 import "core:strings"
+import "core:slice"
 import "core:log"
 import "base:runtime"
 
@@ -123,10 +124,127 @@ host_openfile :: proc(process: ^Process, path: string, attrib: u16, payload: []b
 		data.size = u32(file_size)
 	}
 
-	// TODO: Fix time and data!
+	// TODO: Fix time and date!
 	
 	data.attrib = attrib
 	data.handle = new_handle
 	new_fp^ = fp
 	return .OK
+}
+
+host_findnext :: proc(process: ^Process, payload: []byte) -> Response {
+	// Reference: https://www.stanislavs.org/helppc/int_21-4e.html
+	//            https://jeffpar.github.io/kbarchive/kb/043/Q43144
+
+	Offset :: enum {
+		ATTRIBUTE = 0x15,
+		FILESIZE = 0x1A,
+		FILENAME = 0x1E,
+	}
+
+	slice.zero(payload[0:43])
+	runtime.memset(&payload[Offset.FILENAME], 0x20, 12)
+	
+	// Are we looking for the disk lable?
+	if bool(process.attrib & 0x8) {
+		payload[Offset.ATTRIBUTE] = 0x8
+		runtime.copy_from_string(payload[Offset.FILENAME:], "HOST")
+		return .OK
+	}
+
+	if process.dir == nil {
+		log.warn("FINDNEXT: Called before FINDFIRST")
+		return .NO_MORE_FILES
+	}
+
+	ta := context.temp_allocator
+	using retro_callbacks.vfs
+	
+	for readdir(process.dir) {
+		is_dir := dirent_is_dir(process.dir)
+		cname := dirent_get_name(process.dir)
+		
+		if is_dir && !bool(process.attrib & 0x10) {
+			continue
+		}
+
+		name := strings.to_upper(string(cname), ta)
+		parts := strings.split(name, ".", ta)
+
+		if parts[0] == "" {
+			parts = parts[1:]
+		}
+
+		if strings.has_prefix(name, ".") {			
+			// Is this RIFS root?
+			if process.path == "." {
+				continue
+			}
+			if (name != ".") && (name != "..") { 
+				continue
+			}
+			parts = {name} // Allow '.' in name.
+		}
+
+		if proc(parts: []string) -> bool {
+			switch len(parts) {
+				case 2:
+					if len(parts[1]) > 3 {
+						return true
+					}
+					fallthrough
+				case 1:
+					if len(parts[0]) > 8 {
+						return true
+					}
+				case:
+					return true
+			}
+			return false
+		} (parts) { 
+			log.warnf("FINDNEXT: Invalid DOS filename: %s", cname)
+			continue
+		}
+
+		// TODO: Fix time and date!
+
+		if is_dir {
+			payload[Offset.ATTRIBUTE] = 0x10
+		} else {
+			str := strings.clone_to_cstring(strings.join({process.path, string(cname)}, "/", ta), ta)
+			if size: i32; bool(stat(str, &size) & retro.VFS_STAT_IS_VALID) {
+				payload_as(payload[Offset.FILESIZE:], i32)^ = size
+			}
+		}
+
+		runtime.copy_from_string(payload[Offset.FILENAME:], parts[0])
+		if len(parts) > 1 {
+			runtime.copy_from_string(payload[Offset.FILENAME + Offset(8):], parts[1])
+		}
+		return .OK
+	}
+
+	retro_callbacks.vfs.closedir(process.dir)
+	process.dir = nil
+	return .NO_MORE_FILES
+}
+
+host_findfirst :: proc(process: ^Process, path: string, payload: []byte) -> Response {
+	if process.dir != nil {
+		retro_callbacks.vfs.closedir(process.dir)
+	}
+
+	if process.path != "" {
+		delete(process.path)
+		process.path = ""
+	}
+	
+	cpath := strings.clone_to_cstring(path, context.temp_allocator)
+	if process.dir = retro_callbacks.vfs.opendir(cpath, false); process.dir != nil {
+		process.path = strings.clone(path)
+		return host_findnext(process, payload)
+	}
+
+	slice.zero(payload[0:43])
+	return .PATH_NOT_FOUND
 }

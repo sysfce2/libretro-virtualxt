@@ -28,6 +28,7 @@ import "core:slice"
 import "core:mem"
 import "core:strings"
 import "core:log"
+import "base:runtime"
 
 import "vxt:machine/peripheral"
 
@@ -92,6 +93,10 @@ Packet :: struct #packed {
 Process :: struct {
 	process_id: u16,
 	active: bool,
+	attrib: u16,
+	pattern: [12]byte,
+	path: string,
+	dir: ^retro.vfs_dir_handle,
 	files: [dynamic]^retro.vfs_file_handle,
 }
 
@@ -189,8 +194,7 @@ transform_path :: proc(fs: ^FS, path: string) -> string {
 	}
 	
 	p, _ = strings.replace(p, "\\", "/", -1, context.temp_allocator)
-	p = strings.trim_prefix(p, "/")
-	p = adjust_case_path(p)
+	p = adjust_case_path(strings.trim_prefix(p, "/"))
 	p, _ = strings.concatenate({fs.root_path, p}, context.temp_allocator)
 	return p
 }
@@ -225,15 +229,12 @@ process_request :: proc(using fs: ^FS, pk: ^Packet, buffer: []byte) -> (resp := 
 	case .RMDIR:
 		path := null_terminated_string(packet_payload(pk))
 		resp = host_rmdir(transform_path(fs, path))
-		return
 	case .MKDIR:
 		path := null_terminated_string(packet_payload(pk))
 		resp = host_mkdir(transform_path(fs, path))
-		return
 	case .CHDIR:
 		path := null_terminated_string(packet_payload(pk))
 		resp = host_exists(transform_path(fs, path)) ? .OK : .PATH_NOT_FOUND
-		return
 	case .GETSPACE:
 		// TODO: We just fake this and say we always have 32Mb of free space. :D
 
@@ -247,11 +248,9 @@ process_request :: proc(using fs: ^FS, pk: ^Packet, buffer: []byte) -> (resp := 
 		available_clusters = 63
 
 		payload_size = 8
-		return
 	case .SETATTR:
 		path := null_terminated_string(packet_payload(pk)[2:])
 		resp = host_exists(transform_path(fs, path)) ? .OK : .FILE_NOT_FOUND
-		return
 	case .GETATTR:
 		path := transform_path(fs, null_terminated_string(packet_payload(pk)))
 		if host_exists(path) {
@@ -260,18 +259,15 @@ process_request :: proc(using fs: ^FS, pk: ^Packet, buffer: []byte) -> (resp := 
 		} else {
 			resp = .FILE_NOT_FOUND
 		}
-		return
 	case .RENAMEFILE:
 		data := packet_payload(pk)
 		old_name := transform_path(fs, null_terminated_string(data))
 		new_name := transform_path(fs, null_terminated_string(data[len(old_name) + 1:]))
-
+		
 		resp = host_rename(transform_path(fs, old_name), transform_path(fs, new_name))
-		return
 	case .DELETEFILE:
 		path := null_terminated_string(packet_payload(pk))
 		resp = host_delete(transform_path(fs, path))
-		return
 	case .CLOSEFILE:
 		idx := packet_payload_as(pk, u16)^
 		p := get_process(fs, pk.process_id)
@@ -283,10 +279,19 @@ process_request :: proc(using fs: ^FS, pk: ^Packet, buffer: []byte) -> (resp := 
 			retro_callbacks.vfs.close(fp^)
 			fp^ = nil
 		}
-		return
 	case .CLOSEALL:
 		p := get_process(fs, pk.process_id)
 		p.active = false
+
+		if p.dir != nil {
+			retro_callbacks.vfs.closedir(p.dir)
+			p.dir = nil
+		}
+
+		if p.path != "" {
+			delete(p.path)
+			p.path = ""
+		}
 		
 		for fp in p.files {
 			if fp != nil {
@@ -294,7 +299,6 @@ process_request :: proc(using fs: ^FS, pk: ^Packet, buffer: []byte) -> (resp := 
 			}
 		}
 		clear(&p.files)
-		return
 	case .OPENFILE, .CREATEFILE:
 		attrib := (pk.cmd == .OPENFILE) ? packet_payload_as(pk, u16)^ : 1
 		path := null_terminated_string(packet_payload(pk)[2:])
@@ -302,7 +306,6 @@ process_request :: proc(using fs: ^FS, pk: ^Packet, buffer: []byte) -> (resp := 
 		
 		resp = host_openfile(process, transform_path(fs, path), attrib, buffer)
 		payload_size = (resp == .OK) ? 12 : 0
-		return
 	case .READFILE, .WRITEFILE:
 		using data := packet_payload_as(pk, struct #packed {
 			handle: u16,
@@ -346,21 +349,30 @@ process_request :: proc(using fs: ^FS, pk: ^Packet, buffer: []byte) -> (resp := 
 
 		payload_size += num
 		result^ = u16(num)
-		return
-	case .FINDFIRST, .FINDNEXT:
-		log.errorf("NOT IMPLEMENTED", pk.cmd)
-		resp = .UNKNOWN // Unknown command
-		return
+	case .FINDFIRST:
+		str := null_terminated_string(packet_payload(pk)[2:])
+		split := strings.last_index(str, "\\")
+		path := str[0:split]
+		process := get_process(fs, pk.process_id)
+
+		process.attrib = packet_payload_as(pk, u16)^
+		runtime.copy_from_string(process.pattern[:], str[split + 1:])
+		
+		resp = host_findfirst(process, transform_path(fs, path), buffer)
+		payload_size = (resp == .OK) ? 43 : 0
+	case .FINDNEXT:
+		process := get_process(fs, pk.process_id)
+		resp = host_findnext(process, buffer)
+		payload_size = (resp == .OK) ? 43 : 0
 	case .COMMITFILE, .LOCKFILE, .UNLOCKFILE:
-		return
 	case .EXTOPEN:
 		// TODO
 		fallthrough
 	case:
 		log.errorf("Unknown RIFS command: %v (payload size %d)", pk.cmd, pk.length)
 		resp = .UNKNOWN // Unknown command
-		return
 	}
+	return
 }
 
 server_response :: proc(fs: ^FS, id: u16, resp: Response, buffer: []byte) {
@@ -381,6 +393,14 @@ server_response :: proc(fs: ^FS, id: u16, resp: Response, buffer: []byte) {
 destroy :: proc(fs: ^FS) {
 	for i := 0; i < len(fs.dos_processes); i += 1 {
 		p := &fs.dos_processes[i]
+		if p.dir != nil {
+			retro_callbacks.vfs.closedir(p.dir)
+		}
+
+		if p.path != "" {
+			delete(p.path)
+		}
+		
 		for &fp in p.files {
 			if fp != nil {
 				retro_callbacks.vfs.close(fp)
