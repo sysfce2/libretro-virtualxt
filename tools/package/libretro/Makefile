@@ -60,7 +60,7 @@ ifneq (,$(findstring unix,$(platform)))
    else ifeq ($(ARCH), x86_64)
         ODIN_TARGET = linux_amd64
    else
-        ODIN_TARGET = linux_i386     
+        ODIN_TARGET = linux_i386
    endif
 else ifeq ($(platform), linux-portable)
    EXT ?= so
@@ -185,6 +185,8 @@ OBJECTS = $(TARGET_NAME)_libretro.$(OBJ_EXT)
 all: $(TARGET)
 
 setup:
+	rm -rf odin
+	rm -f odin.zip
 	curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/$(ODIN_VERSION)/odin-$(system_odin)-$(ODIN_VERSION).zip && $(ODIN_UNPACK)
 
 $(OBJECTS): setup
