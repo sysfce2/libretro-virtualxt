@@ -160,29 +160,31 @@ adjust_case_path :: proc(path: string) -> string {
 		return path
 	}
 
+	ta := context.temp_allocator
 	new_path := "."
 
-	str := strings.clone(path, context.temp_allocator)
+	str := strings.clone(path, ta)
 	for part in strings.split_iterator(&str, "/") {
 		using retro_callbacks.vfs
 
-		dir := opendir(strings.clone_to_cstring(new_path, context.temp_allocator), false)
-		if dir == nil {
+		dir := opendir(strings.clone_to_cstring(new_path, ta), false)
+		if dir == nil {		
 			return path // Just return the original path.
 		}
 		defer closedir(dir)
 
-		for dir != nil {
+		new_part := part
+		for readdir(dir) {
 			name := string(dirent_get_name(dir))
-			upper_name := strings.to_upper(name, context.temp_allocator)
-			if upper_name == part {
-				new_path = strings.join({new_path, name}, "/", context.temp_allocator)	
-			}
+			upper_name := strings.to_upper(name, ta)
 
-			if !readdir(dir) {
+			if upper_name == part {
+				new_part = name
 				break
 			}
 		}
+
+		new_path = strings.join({new_path, new_part}, "/", ta)
 	}
 	return new_path
 }
@@ -192,10 +194,11 @@ transform_path :: proc(fs: ^FS, path: string) -> string {
 	if (len(p) > 1) && (p[1] == ':') {
 		p = p[2:]
 	}
-	
-	p, _ = strings.replace(p, "\\", "/", -1, context.temp_allocator)
+
+	ta := context.temp_allocator
+	p, _ = strings.replace(p, "\\", "/", -1, ta)
 	p = adjust_case_path(strings.trim_prefix(p, "/"))
-	p, _ = strings.concatenate({fs.root_path, p}, context.temp_allocator)
+	p, _ = strings.concatenate({fs.root_path, p}, ta)
 	return p
 }
 
