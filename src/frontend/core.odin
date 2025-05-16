@@ -245,7 +245,7 @@ setup_machine_config :: proc(config_path: string) -> bool {
 
 		if mod_name, ok := section_data["module"]; ok {
 			// This depends on VFS API version so we need to prevent it loading.
-			if (mod_name != "rifs2") || enable_rifs { 
+			if (mod_name != "rifs2") || enable_rifs {
 				instantiate(mod_name, section_name)
 			}
 		}
@@ -300,13 +300,35 @@ setup_default_machine :: proc(info: ^retro.game_info) {
 	configure("vxtx", "mem", #load("bios:vxtx.bin", []byte))
 	configure("vxtx", "base", "0xFD800")
 
+	rifs_launch: bool
 	if enable_rifs {
 		instantiate("rifs2")
+
+		if info != nil {
+			ta := context.temp_allocator
+			path := strings.to_lower(string(info.path), ta)
+
+			if strings.has_suffix(path, "exe") || strings.has_suffix(path, "com") || strings.has_suffix(path, "bat") {
+				rifs_launch = true
+
+				path = string(info.path)
+				configure("rifs2", "launch", path)
+
+				path, _ = strings.replace(path, "\\", "/", -1, ta)
+				split := strings.last_index(path, "/")
+				dir := path[0:split]
+
+				if dir[len(dir) - 1] != '/' {
+					dir = strings.concatenate({dir, "/"}, ta)
+				}
+				configure("rifs2", "root", dir)
+			}
+		}
 	}
 
 	{
 		instantiate("disk")
-		if info != nil {
+		if (info != nil) && !rifs_launch {
 			configure("disk", "auto", string(info.path))
 		} else if path := write_default_disk_image(reset_default_disk); path != "" {
 			configure("disk", "auto", path)
@@ -384,10 +406,12 @@ retro_load_game :: proc "c" (info: ^retro.game_info) -> c.bool {
 		return false
 	}
 
-	vfs_info := retro.vfs_interface_info{required_interface_version = 1}
+	vfs_info := retro.vfs_interface_info {
+		required_interface_version = 1,
+	}
 	if retro_callbacks.environment(retro.ENVIRONMENT_GET_VFS_INTERFACE, &vfs_info) && (vfs_info.iface != nil) {
 		retro_callbacks.vfs = vfs_info.iface
-		
+
 		if enable_rifs && (vfs_info.required_interface_version < 3) {
 			show_message("Frontend does not support VFS v3 API. RIFS2 module will not be loaded!", 3 * time.Second)
 			enable_rifs = false
@@ -477,7 +501,7 @@ retro_get_system_info :: proc "c" (info: ^retro.system_info) {
 		library_version  = VXT_VERSION,
 		block_extract    = true,
 		need_fullpath    = true,
-		valid_extensions = "img|ini",
+		valid_extensions = "img|ini|exe|com|bat",
 	}
 }
 

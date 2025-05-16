@@ -105,7 +105,7 @@ FS :: struct {
 	base_port:                   u16,
 	registers:                   [8]byte,
 	dlab:                        bool,
-	root_path:                   string,
+	root_path, launch_path:      string,
 	dos_processes:               [dynamic]Process,
 	input_queue, output_queue:   queue.Queue(byte),
 
@@ -114,6 +114,18 @@ FS :: struct {
 }
 
 config :: proc(fs: ^FS, name, key: string, value: any) -> bool {
+	if name != "rifs2" {
+		return true
+	}
+
+	switch key {
+	case "root":
+		fs.root_path = strings.clone(value.(string))
+	case "launch":
+		fs.launch_path = strings.clone(value.(string))
+	case:
+		return false
+	}
 	return true
 }
 
@@ -306,9 +318,10 @@ process_request :: proc(using fs: ^FS, pk: ^Packet, buffer: []byte) -> (resp := 
 	case .OPENFILE, .CREATEFILE:
 		attrib := (pk.cmd == .OPENFILE) ? packet_payload_as(pk, u16)^ : 1
 		path := null_terminated_string(packet_payload(pk)[2:])
+		tpath := strings.contains(path, "!!!!!!!!") ? launch_path : transform_path(fs, path)
 		process := get_process(fs, pk.process_id)
 
-		resp = host_openfile(process, transform_path(fs, path), attrib, buffer)
+		resp = host_openfile(process, tpath, attrib, buffer)
 		payload_size = (resp == .OK) ? 12 : 0
 	case .READFILE, .WRITEFILE:
 		using data := packet_payload_as(pk, struct #packed {
@@ -423,18 +436,19 @@ destroy :: proc(fs: ^FS) {
 			retro_callbacks.vfs.closedir(p.dir)
 		}
 
-		if p.path != "" {
-			delete(p.path)
-		}
-
 		for &fp in p.files {
 			if fp != nil {
 				retro_callbacks.vfs.close(fp)
 			}
 		}
+
 		delete(p.files)
+		delete(p.path)
 	}
+
 	delete(fs.dos_processes)
+	delete(fs.root_path)
+	delete(fs.launch_path)
 
 	queue.destroy(&fs.input_queue)
 	queue.destroy(&fs.output_queue)

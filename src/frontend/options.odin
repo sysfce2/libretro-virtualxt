@@ -52,7 +52,7 @@ options := [?]retro.variable {
 	{"virtualxt_ems", "EMS memory; true|false"},
 	{"virtualxt_bios", "BIOS; GLaBIOS 0.2.6|TurboXT 3.1"},
 	{"virtualxt_rtc", "RTC type; " + ("GLaTICK 0.8.4|none" when ODIN_OS != .Freestanding else "unavailable")},
-	{"virtualxt_rifs", "File share; " + ("false|true" when ODIN_OS != .Freestanding else "unavailable")},
+	{"virtualxt_rifs", "Host RIFS2; " + ("true|false" when ODIN_OS != .Freestanding else "unavailable")},
 	{"virtualxt_gdb", "GDB server; " + ("false|true" when #config(VXT_GDBSTUB, false) else "unavailable")},
 	{"virtualxt_gdb_halt", "Wait for debugger; " + ("false|true" when #config(VXT_GDBSTUB, false) else "unavailable")},
 	{},
