@@ -36,6 +36,10 @@ else ifneq ($(findstring MINGW,$(shell uname -a)),)
 	system_odin = windows-amd64
 endif
 
+ifeq (,$(ARCH))
+   ARCH = $(shell uname -m)
+endif
+
 OBJ_EXT := o
 ifeq ($(STATIC_LINKING), 1)
    EXT := a
@@ -49,8 +53,15 @@ ifneq (,$(findstring unix,$(platform)))
    fpic := -fPIC
    SHARED := -shared -Wl,--no-undefined
 
-   # NOTE: We only support linux amd64 atm.
-   ODIN_TARGET = linux_amd64
+   ifeq ($(ARCH), aarch64)
+    	ODIN_TARGET = linux_arm64
+   else ifeq ($(ARCH), arm)
+		ODIN_TARGET = linux_arm32
+   else ifeq ($(ARCH), x86_64)
+        ODIN_TARGET = linux_amd64
+   else
+        ODIN_TARGET = linux_i386
+   endif
 else ifeq ($(platform), linux-portable)
    EXT ?= so
    TARGET := $(TARGET_NAME)_libretro.$(EXT)
@@ -174,6 +185,8 @@ OBJECTS = $(TARGET_NAME)_libretro.$(OBJ_EXT)
 all: $(TARGET)
 
 setup:
+	rm -rf odin
+	rm -f odin.zip
 	curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/$(ODIN_VERSION)/odin-$(system_odin)-$(ODIN_VERSION).zip && $(ODIN_UNPACK)
 
 $(OBJECTS): setup
