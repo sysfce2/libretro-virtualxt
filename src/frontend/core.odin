@@ -308,7 +308,7 @@ setup_default_machine :: proc(info: ^retro.game_info) {
 			ta := context.temp_allocator
 			path := strings.to_lower(string(info.path), ta)
 
-			if strings.has_suffix(path, "exe") || strings.has_suffix(path, "com") || strings.has_suffix(path, "bat") {
+			if strings.has_suffix(path, "exe") || strings.has_suffix(path, "com") {
 				rifs_launch = true
 
 				path = string(info.path)
@@ -501,7 +501,7 @@ retro_get_system_info :: proc "c" (info: ^retro.system_info) {
 		library_version  = VXT_VERSION,
 		block_extract    = true,
 		need_fullpath    = true,
-		valid_extensions = "img|ini|exe|com|bat",
+		valid_extensions = "img|ini|exe|com",
 	}
 }
 

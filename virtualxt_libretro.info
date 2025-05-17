@@ -1,7 +1,7 @@
 # Software Information
 display_name = "VirtualXT"
 authors = "Andreas T Jonsson"
-supported_extensions = "img|ini|exe|com|bat"
+supported_extensions = "img|ini|exe|com"
 corename = "virtualxt"
 license = "zlib"
 permissions = ""
