@@ -28,6 +28,10 @@ get_registers :: proc() -> ^peripheral.Peripheral_CPU_Registers {
 	return &registers
 }
 
+exec_cycles :: proc(#any_int cycles: uint = 1) {
+	state.cycles += cycles
+}
+
 reset :: proc() {
 	state.instruction.rep_prefix = 0
 
@@ -40,19 +44,22 @@ reset :: proc() {
 }
 
 initialize :: proc(flag286: bool) {
-	state.reserved = { .RESERVED_0 }
+	state.reserved = {.RESERVED_0}
 	if !flag286 {
-		state.reserved += { .RESERVED_3, .RESERVED_4, .RESERVED_5, .RESERVED_6 }
+		state.reserved += {.RESERVED_3, .RESERVED_4, .RESERVED_5, .RESERVED_6}
 	}
-	
+
 	ok: bool
 	if _, interrupt_controler, ok = peripheral.get_peripheral_from_class(.PIC); !ok {
 		log.warn("Interrupt controller is not connected!")
 	}
 }
 
-step :: proc(op186: bool) -> (cycles: uint = 1, repeat, div_zero: bool, ok := true) {
+step :: proc(op186: bool) -> (cycles: uint, repeat, div_zero: bool, ok := true) {
 	using state.instruction
+
+	state.cycles = 0
+	ea_cycles = 0
 
 	if rep_prefix == 0 {
 		decode_prepare()
@@ -66,15 +73,20 @@ step :: proc(op186: bool) -> (cycles: uint = 1, repeat, div_zero: bool, ok := tr
 	if valid {
 		if (rep_prefix != 0) && (registers.cx == 0) {
 			rep_prefix = 0
+			state.cycles = 1
 		} else {
 			exec()
 			div_zero = state.div_zero
 		}
 	} else {
 		registers.debug = true
+		state.cycles = 3
 		rep_prefix = 0 // Break repeat here!
 		ok = false
 	}
+
+	// We expect cycle timing at this point!
+	assert(state.cycles > 0)
 
 	// This all happes after opcode is executed.
 	if rep_prefix != 0 {
@@ -94,8 +106,11 @@ step :: proc(op186: bool) -> (cycles: uint = 1, repeat, div_zero: bool, ok := tr
 	}
 
 	check_interrupts()
-	
-	cycles += 8 // TODO: Fix this!
+
+	// TODO: Simulate simple prefetch logic.
+
+	bu_cycles := uint(stream.size * 2) // We are missing prefix byte(s) here. :(
+	cycles = max(state.cycles + ea_cycles, bu_cycles)
 	repeat = rep_prefix != 0
 	return
 }

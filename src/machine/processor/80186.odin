@@ -29,6 +29,10 @@ decode_80186 :: proc() {
 	using state.instruction
 	valid = true
 
+	// Let's not bother with correct 186 timings since
+	// they do not represent a real CPU at this point.
+	exec_cycles()
+
 	switch opcode.raw {
 	case 0x60:
 		// PUSHA

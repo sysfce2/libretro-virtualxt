@@ -45,6 +45,7 @@ create :: proc() -> bool {
 	peripheral_interface.registers = processor.get_registers
 	peripheral_interface.interrupt = interrupt
 	peripheral_interface.frequency = frequency
+	peripheral_interface.wait = processor.exec_cycles
 	peripheral_interface.configure = configure
 	peripheral_interface.read = read_memory
 	peripheral_interface.write = write_memory
@@ -193,7 +194,6 @@ step :: proc(cycles: uint, op186 := true) -> (res: Step, ok := true) {
 
 	for res.cycles < cycles {
 		n, r, z, s := processor.step(op186)
-		assert(n > 0)
 		if !s {
 			ok = s
 		}

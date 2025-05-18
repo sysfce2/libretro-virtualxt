@@ -33,6 +33,7 @@ import "vxt:machine/peripheral"
 
 BOOTSECTOR_ADDRESS :: 0x7C00
 SECTOR_SIZE :: 512
+CYCLE_DELAY :: 1000
 
 Drive :: struct {
 	fp:                        ^retro.vfs_file_handle,
@@ -251,6 +252,8 @@ config :: proc(disk: ^Disk, name, key: string, value: any) -> bool {
 }
 
 io_in :: proc(disk: ^Disk, port: u16) -> byte {
+	peripheral.peripheral_interface.wait(CYCLE_DELAY)
+
 	switch port {
 	case 0xB0:
 		return (disk.boot_drive >= 0x80) ? 0 : 0xFF
@@ -263,6 +266,7 @@ io_in :: proc(disk: ^Disk, port: u16) -> byte {
 }
 
 io_out :: proc(disk: ^Disk, port: u16, _: byte) {
+	peripheral.peripheral_interface.wait(CYCLE_DELAY)
 	if port == 0xB0 {
 		bootstrap(disk)
 		return

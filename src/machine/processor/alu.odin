@@ -50,10 +50,12 @@ ADD :: proc {
 
 PUSH_SR :: proc() {
 	stack_push(state.instruction.reg_seg)
+	exec_cycles(10)
 }
 
 POP_SR :: proc() {
 	get_segment_register(state.instruction.reg_seg)^ = stack_pop()
+	exec_cycles(8)
 }
 
 @(private = "file")
@@ -175,7 +177,9 @@ DAA :: proc() {
 	} else {
 		flags -= {.CARRY}
 	}
+
 	set_psz_flags(al)
+	exec_cycles(4)
 }
 
 @(private = "file")
@@ -222,7 +226,9 @@ DAS :: proc() {
 	} else {
 		flags -= {.CARRY}
 	}
+
 	set_psz_flags(al)
+	exec_cycles(4)
 }
 
 @(private = "file")
@@ -264,6 +270,7 @@ INC_w :: proc(a: u16) -> u16 {
 	set_psz_flags(res)
 	set_flags({.AUXILIARY}, (res & 0xF) == 0)
 	set_flags({.OVERFLOW}, res == 0x8000)
+	exec_cycles(3)
 	return res
 }
 
@@ -274,6 +281,7 @@ INC_eb :: proc() {
 	set_psz_flags(res)
 	set_flags({.AUXILIARY}, (res & 0xF) == 0)
 	set_flags({.OVERFLOW}, res == 0x80)
+	exec_cycles(3)
 }
 
 DEC_w :: proc(a: u16) -> u16 {
@@ -281,6 +289,7 @@ DEC_w :: proc(a: u16) -> u16 {
 	set_psz_flags(res)
 	set_flags({.AUXILIARY}, (res & 0xF) == 0xF)
 	set_flags({.OVERFLOW}, res == 0x7FFF)
+	exec_cycles(3)
 	return res
 }
 
@@ -291,6 +300,7 @@ DEC_eb :: proc() {
 	set_psz_flags(res)
 	set_flags({.AUXILIARY}, (res & 0xF) == 0xF)
 	set_flags({.OVERFLOW}, res == 0x7F)
+	exec_cycles(3)
 }
 
 AAM :: proc() {
@@ -302,12 +312,14 @@ AAM :: proc() {
 		flags += {.PARITY, .ZERO}
 
 		trigger_interrupt(.DIV_ZERO_INT)
+		exec_cycles(71)
 		return
 	}
 
 	ah = al / ib
 	al = al % ib
 	set_psz_flags(al)
+	exec_cycles(83)
 }
 
 MUL_eb :: proc() {
@@ -317,6 +329,9 @@ MUL_eb :: proc() {
 	set_psz_flags(al)
 	set_flags({.CARRY, .OVERFLOW}, ah)
 	set_flags({.AUXILIARY}, false)
+
+	// Rough aproximation.
+	exec_cycles(100)
 }
 
 MUL_ew :: proc() {
@@ -328,6 +343,9 @@ MUL_ew :: proc() {
 	set_psz_flags(ax)
 	set_flags({.CARRY, .OVERFLOW}, dx)
 	set_flags({.AUXILIARY}, false)
+
+	// Rough aproximation.
+	exec_cycles(100)
 }
 
 IMUL_eb :: proc() {
@@ -339,6 +357,9 @@ IMUL_eb :: proc() {
 	set_psz_flags(byte(res & 0xFF))
 	set_flags({.CARRY, .OVERFLOW}, res != i16(i8(res)))
 	set_flags({.AUXILIARY}, false)
+
+	// Rough aproximation.
+	exec_cycles(100)
 }
 
 IMUL_ew :: proc() {
@@ -351,6 +372,9 @@ IMUL_ew :: proc() {
 	set_psz_flags(ax)
 	set_flags({.CARRY, .OVERFLOW}, res != i32(i16(res)))
 	set_flags({.AUXILIARY}, false)
+
+	// Rough aproximation.
+	exec_cycles(150)
 }
 
 IMUL_w :: proc(a, b: u16) -> u16 {
@@ -360,10 +384,16 @@ IMUL_w :: proc(a, b: u16) -> u16 {
 	set_psz_flags(res16)
 	set_flags({.CARRY, .OVERFLOW}, res != i32(i16(res)))
 	set_flags({.AUXILIARY}, false)
+
+	// Rough aproximation.
+	exec_cycles(150)
 	return res16
 }
 
 DIV_eb :: proc() {
+	// Rough aproximation.
+	exec_cycles(100)
+
 	v := u16(load_eb())
 	if v == 0 {
 		trigger_interrupt(.DIV_ZERO_INT)
@@ -385,6 +415,9 @@ DIV_eb :: proc() {
 }
 
 DIV_ew :: proc() {
+	// Rough aproximation.
+	exec_cycles(150)
+
 	v := u32(load_ew())
 	if v == 0 {
 		trigger_interrupt(.DIV_ZERO_INT)
@@ -407,6 +440,9 @@ DIV_ew :: proc() {
 
 IDIV_eb :: proc() {
 	using registers
+
+	// Rough aproximation.
+	exec_cycles(100)
 
 	a := i16(ax)
 	if a == transmute(i16)u16(0x8000) {
@@ -437,6 +473,9 @@ IDIV_eb :: proc() {
 
 IDIV_ew :: proc() {
 	using registers
+
+	// Rough aproximation.
+	exec_cycles(150)
 
 	a := i32((u32(dx) << 16) | u32(ax))
 	if a == transmute(i32)u32(0x80000000) {

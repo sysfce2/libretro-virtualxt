@@ -85,6 +85,7 @@ peripheral_interface: struct {
 	interrupt:  proc(num: uint),
 	registers:  proc() -> ^Peripheral_CPU_Registers,
 	frequency:  proc() -> uint,
+	wait:       proc(cycles: uint),
 	configure:  proc(id, key: string, value: any) -> bool,
 	read:       proc(addr: u32) -> byte,
 	write:      proc(addr: u32, data: byte),

@@ -38,20 +38,28 @@ decode_ea_offset :: proc() {
 	switch mode.rm {
 	case 0:
 		ea_offset = bx + si + mode.disp
+		ea_cycles += 7
 	case 1:
 		ea_offset = bx + di + mode.disp
+		ea_cycles += 8
 	case 2:
 		ea_offset = bp + si + mode.disp
+		ea_cycles += 8
 	case 3:
 		ea_offset = bp + di + mode.disp
+		ea_cycles += 7
 	case 4:
 		ea_offset = si + mode.disp
+		ea_cycles += 5
 	case 5:
 		ea_offset = di + mode.disp
+		ea_cycles += 5
 	case 6:
 		ea_offset = (mode.mod == 0) ? mode.disp : bp + mode.disp
+		ea_cycles += 6
 	case 7:
 		ea_offset = bx + mode.disp
+		ea_cycles += 5
 	}
 }
 
@@ -63,15 +71,17 @@ decode_mod_reg_rm :: proc() {
 	mode.reg = (d >> 3) & 7
 	mode.rm = d & 7
 	mode.disp = 0
+	ea_cycles = 0
 
 	if (mode.mod == 0) && (mode.rm == 6) {
 		mode.disp = decode_fetch_word()
-	} else if (mode.mod == 0) || (mode.mod == 3) {
-		mode.disp = 0
+		ea_cycles += 4
 	} else if mode.mod == 1 {
 		mode.disp = u16(i8(decode_fetch_byte()))
+		ea_cycles += 4
 	} else if mode.mod == 2 {
 		mode.disp = decode_fetch_word()
+		ea_cycles += 4
 	}
 
 	if mode.mod < 3 {
