@@ -29,10 +29,6 @@ decode_80186 :: proc() {
 	using state.instruction
 	valid = true
 
-	// Let's not bother with correct 186 timings since
-	// they do not represent a real CPU at this point.
-	exec_cycles()
-
 	switch opcode.raw {
 	case 0x60:
 		// PUSHA
@@ -48,6 +44,8 @@ decode_80186 :: proc() {
 			stack_push(bp)
 			stack_push(si)
 			stack_push(di)
+
+			exec_cycles(36)
 		}
 	case 0x61:
 		// POPA
@@ -61,6 +59,8 @@ decode_80186 :: proc() {
 			dx = stack_pop()
 			cx = stack_pop()
 			ax = stack_pop()
+
+			exec_cycles(51)
 		}
 	case 0x62:
 		// BOUND
@@ -68,6 +68,7 @@ decode_80186 :: proc() {
 			idx := i16(load_rw())
 			bmin, bmax := load_m1616()
 
+			exec_cycles(35)
 			if (idx < i16(bmin)) || (idx > i16(bmax)) {
 				trigger_interrupt(.BOUND_INT)
 			}
@@ -77,6 +78,7 @@ decode_80186 :: proc() {
 		// PUSH iw - Push immediate word
 		exec = proc() {
 			stack_push(state.instruction.iw1)
+			exec_cycles(3)
 		}
 		iw1 = decode_fetch_word()
 	case 0x69:
@@ -90,6 +92,7 @@ decode_80186 :: proc() {
 		// PUSH ib - Push immediate sign-extended byte
 		exec = proc() {
 			stack_push(state.instruction.ib)
+			exec_cycles(3)
 		}
 		ib = decode_fetch_byte()
 	case 0x6B:
@@ -105,6 +108,7 @@ decode_80186 :: proc() {
 			using registers
 			write_segment_byte(.EXTRA, di, peripheral.peripheral_interface.read_port(dx))
 			di = (.DIRECTION in flags) ? (di - 1) : (di + 1)
+			exec_cycles(14)
 		}
 	case 0x6D:
 		// INSW - Input word from port DX into ES:[DI]
@@ -112,6 +116,7 @@ decode_80186 :: proc() {
 			using registers
 			write_segment_word(.EXTRA, di, (u16(peripheral.peripheral_interface.read_port(dx + 1)) << 8) | u16(peripheral.peripheral_interface.read_port(dx)))
 			di = (.DIRECTION in flags) ? (di - 2) : (di + 2)
+			exec_cycles(14)
 		}
 	case 0x6E:
 		// OUTSB - Output byte DS:[SI] to port number DX
@@ -119,6 +124,7 @@ decode_80186 :: proc() {
 			using registers
 			peripheral.peripheral_interface.write_port(dx, read_segment_byte(state.base_ds, si))
 			si = (.DIRECTION in flags) ? (si - 1) : (si + 1)
+			exec_cycles(14)
 		}
 	case 0x6F:
 		// OUTSW - Output word DS:[SI] to port number DX
@@ -128,6 +134,7 @@ decode_80186 :: proc() {
 			peripheral.peripheral_interface.write_port(dx, byte(data))
 			peripheral.peripheral_interface.write_port(dx + 1, byte(data >> 8))
 			si = (.DIRECTION in flags) ? (si - 2) : (si + 2)
+			exec_cycles(14)
 		}
 	case 0xC0:
 		decode_mod_reg_rm()
@@ -148,6 +155,7 @@ decode_80186 :: proc() {
 			bp := registers.bp
 			sp := registers.sp
 
+			exec_cycles(15)
 			if level := ib & 0x1F; level > 0 {
 				for {
 					if level -= 1; level == 0 {
@@ -155,6 +163,7 @@ decode_80186 :: proc() {
 					}
 					bp -= 2
 					stack_push(read_segment_word(.STACK, bp))
+					exec_cycles(16)
 				}
 				stack_push(sp)
 			}
@@ -170,6 +179,7 @@ decode_80186 :: proc() {
 			using registers
 			sp = bp
 			bp = stack_pop()
+			exec_cycles(8)
 		}
 	case:
 		valid = false

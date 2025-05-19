@@ -67,7 +67,7 @@ decode_prefix :: proc(op186: bool) {
 			rep_prefix = opcode.raw
 		case:
 			stream.op_ip = registers.ip
-			
+
 			if rep_prefix != 0 {
 				switch opcode.raw {
 				case 0xA4 ..= 0xA7, 0xAA ..= 0xAF:
@@ -88,42 +88,49 @@ decode_prefix :: proc(op186: bool) {
 
 decode_shift_byte :: proc() {
 	using state.instruction
-	
+
 	switch mode.reg {
 	case 0:
 		// ROL eb,X
 		exec = proc() {
 			store_eb(ROL(load_eb(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 1:
 		// ROR eb,X
 		exec = proc() {
 			store_eb(ROR(load_eb(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 2:
 		// RCL eb,X
 		exec = proc() {
 			store_eb(RCL(load_eb(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 3:
 		// RCR eb,X
 		exec = proc() {
 			store_eb(RCR(load_eb(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 4, 6:
 		// SHL/SAL eb,X
 		exec = proc() {
 			store_eb(SHL(load_eb(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 5:
 		// SHR eb,X
 		exec = proc() {
 			store_eb(SHR(load_eb(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 7:
 		// SAR eb,X
 		exec = proc() {
 			store_eb(SAR(load_eb(), state.shift_count))
+			exec_cycles(4)
 		}
 	}
 }
@@ -136,36 +143,43 @@ decode_shift_word :: proc() {
 		// ROL ew,X
 		exec = proc() {
 			store_ew(ROL(load_ew(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 1:
 		// ROR ew,X
 		exec = proc() {
 			store_ew(ROR(load_ew(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 2:
 		// RCL ew,X
 		exec = proc() {
 			store_ew(RCL(load_ew(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 3:
 		// RCR ew,X
 		exec = proc() {
 			store_ew(RCR(load_ew(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 4, 6:
 		// SHL/SAL ew,X
 		exec = proc() {
 			store_ew(SHL(load_ew(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 5:
 		// SHR ew,X
 		exec = proc() {
 			store_ew(SHR(load_ew(), state.shift_count))
+			exec_cycles(4)
 		}
 	case 7:
 		// SAR ew,X
 		exec = proc() {
 			store_ew(SAR(load_ew(), state.shift_count))
+			exec_cycles(4)
 		}
 	}
 }

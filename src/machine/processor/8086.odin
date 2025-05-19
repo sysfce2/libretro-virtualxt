@@ -1197,22 +1197,18 @@ decode_8086 :: proc() {
 		decode_mod_reg_rm()
 		state.shift_count = 1
 		decode_shift_byte()
-		exec_cycles(2)
 	case 0xD1:
 		decode_mod_reg_rm()
 		state.shift_count = 1
 		decode_shift_word()
-		exec_cycles(2)
 	case 0xD2:
 		decode_mod_reg_rm()
 		state.shift_count = registers.cl
 		decode_shift_byte()
-		exec_cycles(8 + 4 * state.shift_count)
 	case 0xD3:
 		decode_mod_reg_rm()
 		state.shift_count = registers.cl
 		decode_shift_word()
-		exec_cycles(8 + 4 * state.shift_count)
 	case 0xD4:
 		// AAM - ASCII adjust AX after multiply
 		exec = AAM
