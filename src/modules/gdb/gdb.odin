@@ -113,7 +113,7 @@ install :: proc(gdb: ^GDB) -> bool {
 		}
 		peripheral.peripheral_interface.registers().debug = true
 	}
-	return false
+	return true
 }
 
 config :: proc(gdb: ^GDB, name, key: string, value: any) -> bool {

@@ -21,6 +21,7 @@
 
 package processor
 
+import "core:container/queue"
 import "core:log"
 import "vxt:machine/peripheral"
 
@@ -29,11 +30,14 @@ get_registers :: proc() -> ^peripheral.Peripheral_CPU_Registers {
 }
 
 exec_cycles :: proc(#any_int cycles: uint = 1) {
-	state.cycles += cycles
+	state.ex_cycles += cycles
 }
 
 reset :: proc() {
 	state.instruction.rep_prefix = 0
+
+	state.flush = false
+	queue.clear(&state.prefetch_queue)
 
 	registers = peripheral.Peripheral_CPU_Registers {
 		debug = registers.debug, // Preserve flag for external debugger.
@@ -43,9 +47,12 @@ reset :: proc() {
 	}
 }
 
-initialize :: proc(flag286: bool) {
+initialize :: proc(options: peripheral.Peripheral_CPU_Options) {
+	state.cpu_options = options
+	queue.init_from_slice(&state.prefetch_queue, state.prefetch_buffer[:])
+
 	state.reserved = {.RESERVED_0}
-	if !flag286 {
+	if .FLAG_286 not_in state.cpu_options {
 		state.reserved += {.RESERVED_3, .RESERVED_4, .RESERVED_5, .RESERVED_6}
 	}
 
@@ -55,16 +62,16 @@ initialize :: proc(flag286: bool) {
 	}
 }
 
-step :: proc(op186: bool) -> (cycles: uint, repeat, div_zero: bool, ok := true) {
+step :: proc() -> (cycles: uint, repeat, div_zero: bool, ok := true) {
 	using state.instruction
 
-	state.cycles = 0
-	ea_cycles = 0
+	state.ex_cycles = 0
+	state.bu_cycles = 0
 
 	if rep_prefix == 0 {
 		decode_prepare()
-		decode_prefix(op186)
-		decode_opcode(op186)
+		decode_prefix()
+		decode_opcode()
 
 		write_cpu_trace()
 		registers.ip += u16(stream.size)
@@ -73,20 +80,20 @@ step :: proc(op186: bool) -> (cycles: uint, repeat, div_zero: bool, ok := true) 
 	if valid {
 		if (rep_prefix != 0) && (registers.cx == 0) {
 			rep_prefix = 0
-			state.cycles = 1
+			state.ex_cycles = 1
 		} else {
 			exec()
 			div_zero = state.div_zero
 		}
 	} else {
 		registers.debug = true
-		state.cycles = 3
+		state.ex_cycles = 3 // Just like a NOP?
 		rep_prefix = 0 // Break repeat here!
 		ok = false
 	}
 
 	// We expect cycle timing at this point!
-	assert(state.cycles > 0)
+	assert(state.ex_cycles > 0)
 
 	// This all happes after opcode is executed.
 	if rep_prefix != 0 {
@@ -107,10 +114,22 @@ step :: proc(op186: bool) -> (cycles: uint, repeat, div_zero: bool, ok := true) 
 
 	check_interrupts()
 
-	// TODO: Simulate simple prefetch logic.
+	// Update prefetch queue.
+	if state.flush {
+		state.flush = false
+		queue.clear(&state.prefetch_queue)
+	} else {
+		n := max(int(state.ex_cycles) - int(state.bu_cycles), 0) / 2
+		for i := 0; i < n; i += 1 {
+			ln := u16(queue.len(state.prefetch_queue))
+			if ln >= PREFETCH_QUEUE_SIZE {
+				break
+			}
+			queue.push_back(&state.prefetch_queue, read_segment_byte(.CODE, registers.ip + ln))
+		}
+	}
 
-	bu_cycles := uint(stream.size * 2) // We are missing prefix byte(s) here. :(
-	cycles = max(state.cycles + ea_cycles, bu_cycles)
+	cycles = max(state.ex_cycles, state.bu_cycles)
 	repeat = rep_prefix != 0
 	return
 }

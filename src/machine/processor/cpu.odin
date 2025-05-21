@@ -23,9 +23,11 @@
 
 package processor
 
+import "core:container/queue"
 import "vxt:machine/peripheral"
 
 MAX_INSTRUCTION_SIZE :: 6
+PREFETCH_QUEUE_SIZE :: 4
 
 Segment :: enum {
 	EXTRA,
@@ -78,10 +80,13 @@ state: struct {
 	instruction:               Instruction,
 	base_ds, base_ss:          Segment,
 	shift_count:               byte,
-	cycles:                    uint,
-	halt, trap:                bool,
+	ex_cycles, bu_cycles:      uint,
+	flush, halt, trap:         bool,
 	invert_quotient, div_zero: bool,
+	cpu_options:               peripheral.Peripheral_CPU_Options,
 	reserved:                  peripheral.Peripheral_CPU_Flags,
+	prefetch_buffer:           [PREFETCH_QUEUE_SIZE]byte,
+	prefetch_queue:            queue.Queue(byte),
 }
 
 check_interrupts :: proc() {
@@ -186,6 +191,7 @@ get_physical_address :: proc(seg: Segment, offset: u16) -> u32 {
 }
 
 read_segment_byte :: proc(seg: Segment, offset: u16) -> byte {
+	state.bu_cycles += 2
 	return peripheral.peripheral_interface.read(get_physical_address(seg, offset))
 }
 
@@ -194,6 +200,7 @@ read_segment_word :: proc(seg: Segment, offset: u16) -> u16 {
 }
 
 write_segment_byte :: proc(seg: Segment, offset: u16, value: byte) {
+	state.bu_cycles += 2
 	peripheral.peripheral_interface.write(get_physical_address(seg, offset), value)
 }
 
@@ -251,6 +258,7 @@ branch_relative_word :: proc(offset: i16) {
 @(private = "file")
 branch_near :: proc(ip: u16) {
 	registers.ip = ip
+	state.flush = true
 }
 
 @(private = "file")
@@ -258,6 +266,7 @@ branch_far :: proc(seg, offset: u16) {
 	using registers
 	cs = seg
 	ip = offset
+	state.flush = true
 }
 
 branch :: proc {
@@ -291,6 +300,7 @@ return_near :: proc(offset: u16, pop: u16 = 0) {
 	using registers
 	ip = offset
 	sp += pop
+	state.flush = true
 }
 
 return_far :: proc(seg, offset: u16, pop: u16 = 0) {

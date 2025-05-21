@@ -439,8 +439,11 @@ retro_load_game :: proc "c" (info: ^retro.game_info) -> c.bool {
 			setup_default_machine(info)
 		}
 
+		cpu_options := CPU_Options{.USE_PREFETCH}
+		cpu_options += flag_286 ? {.USE_186} : {}
+
 		check_variables()
-		initialize(flag_286)
+		initialize(cpu_options) or_return
 		print_status()
 	}
 
@@ -475,7 +478,7 @@ retro_run :: proc "c" () {
 		cycles = n
 	}
 
-	if _, ok := machine.step(uint(cycles), enable_186); !ok {
+	if _, ok := machine.step(uint(cycles)); !ok {
 		@(static) msg_timer: time.Duration
 		if (current_time - msg_timer) > (5 * time.Second) {
 			msg_timer = current_time

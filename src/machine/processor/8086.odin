@@ -136,6 +136,7 @@ decode_8086 :: proc() {
 		reg_seg = .CODE
 
 		// Not strictly correct but lets flag here so user knows this is unlikely to work.
+		state.flush = true
 		valid = false
 	case 0x10:
 		// ADC eb,rb - Add with carry byte register into EA byte

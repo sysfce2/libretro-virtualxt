@@ -23,6 +23,8 @@
 
 package processor
 
+import "core:container/queue"
+
 decode_prepare :: proc() {
 	state.invert_quotient = false
 	state.div_zero = false
@@ -35,7 +37,7 @@ decode_prepare :: proc() {
 	}
 }
 
-decode_prefix :: proc(op186: bool) {
+decode_prefix :: proc() {
 	using state, state.instruction
 	for {
 		opcode.raw = decode_fetch_byte()
@@ -73,7 +75,7 @@ decode_prefix :: proc(op186: bool) {
 				case 0xA4 ..= 0xA7, 0xAA ..= 0xAF:
 					return // Opcode is valid to repeat.
 				case 0x6C ..= 0x6F:
-					if op186 {
+					if .USE_186 in cpu_options {
 						return // Valid on 80186
 					}
 				case 0xF6, 0xF7:
@@ -184,21 +186,24 @@ decode_shift_word :: proc() {
 	}
 }
 
-decode_opcode :: proc(op186: bool) {
+decode_opcode :: proc() {
 	decode_8086()
-	if !state.instruction.valid && op186 {
+	if !state.instruction.valid && (.USE_186 in state.cpu_options) {
 		decode_80186()
 	}
+	exec_cycles(state.instruction.ea_cycles)
 }
 
 decode_fetch_byte :: proc() -> byte {
 	using state.instruction
 
-	data := read_segment_byte(.CODE, registers.ip + u16(stream.size))
+	data, ok := queue.pop_front_safe(&state.prefetch_queue)
+	if !ok {
+		data = read_segment_byte(.CODE, registers.ip + u16(stream.size))
+	}
+
 	stream.data[stream.size] = data
 	stream.size += 1
-
-	assert(stream.size <= MAX_INSTRUCTION_SIZE)
 	return data
 }
 

@@ -41,7 +41,7 @@ Channel :: struct {
 }
 
 PIT :: struct {
-	channels: [3]Channel,
+	channels: [4]Channel,
 	ticker:   f64,
 }
 

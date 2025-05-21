@@ -21,11 +21,17 @@
 
 package peripheral
 
+Peripheral_CPU_Options :: bit_set[enum {
+	USE_PREFETCH,
+	USE_186,
+	FLAG_286,
+}]
+
 Peripheral_CPU_Flags :: bit_set[enum {
 	CARRY,
 	RESERVED_0,
 	PARITY,
-	RESERVED_1,	
+	RESERVED_1,
 	AUXILIARY,
 	RESERVED_2,
 	ZERO,
@@ -38,49 +44,36 @@ Peripheral_CPU_Flags :: bit_set[enum {
 	RESERVED_4,
 	RESERVED_5,
 	RESERVED_6,
-}; u16]
+};u16]
 
-VALID_LOW_FLAGS :: Peripheral_CPU_Flags {
-	.CARRY,
-	.PARITY,
-	.AUXILIARY,
-	.ZERO,
-	.SIGN,
-}
-
-VALID_HIGH_FLAGS :: Peripheral_CPU_Flags {
-	.TRAP,
-	.INTERRUPT,
-	.DIRECTION,
-	.OVERFLOW,
-}
-
+VALID_LOW_FLAGS :: Peripheral_CPU_Flags{.CARRY, .PARITY, .AUXILIARY, .ZERO, .SIGN}
+VALID_HIGH_FLAGS :: Peripheral_CPU_Flags{.TRAP, .INTERRUPT, .DIRECTION, .OVERFLOW}
 VALID_FLAGS :: VALID_HIGH_FLAGS | VALID_LOW_FLAGS
 
 Peripheral_CPU_Registers :: struct {
-	using _: struct #raw_union {
+	using _:        struct #raw_union {
 		using _: struct #packed {
 			al, ah: byte,
 		},
-		ax: u16,
+		ax:      u16,
 	},
-	using _: struct #raw_union {
+	using _:        struct #raw_union {
 		using _: struct #packed {
 			bl, bh: byte,
 		},
-		bx: u16,
+		bx:      u16,
 	},
-	using _: struct #raw_union {
+	using _:        struct #raw_union {
 		using _: struct #packed {
 			cl, ch: byte,
 		},
-		cx: u16,
+		cx:      u16,
 	},
-	using _: struct #raw_union {
+	using _:        struct #raw_union {
 		using _: struct #packed {
 			dl, dh: byte,
 		},
-		dx: u16,
+		dx:      u16,
 	},
 	sp, bp, si, di: u16,
 	cs, ss, ds, es: u16,

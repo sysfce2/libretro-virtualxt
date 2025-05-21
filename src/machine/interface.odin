@@ -36,6 +36,7 @@ Step :: struct {
 
 Peripheral :: peripheral.Peripheral
 Peripheral_Class :: peripheral.Peripheral_Class
+CPU_Options :: peripheral.Peripheral_CPU_Options
 
 registers :: processor.get_registers
 
@@ -59,7 +60,7 @@ create :: proc() -> bool {
 	return true
 }
 
-initialize :: proc(flag286 := false) -> bool {
+initialize :: proc(cpu_options := CPU_Options{.USE_PREFETCH, .USE_186}) -> bool {
 	for p in peripheral.peripheral_manager.peripherals {
 		if p.install == nil {
 			continue
@@ -76,10 +77,8 @@ initialize :: proc(flag286 := false) -> bool {
 		}
 	}
 
-	processor.initialize(flag286)
-	reset()
-
-	return true
+	processor.initialize(cpu_options)
+	return reset()
 }
 
 destroy :: proc() {
@@ -99,6 +98,8 @@ destroy :: proc() {
 }
 
 reset :: proc() -> bool {
+	log.info("System reset!")
+
 	for p in peripheral.peripheral_manager.peripherals {
 		if p.reset != nil {
 			p.reset(peripheral.get_peripheral(p)) or_return
@@ -189,11 +190,11 @@ print_status :: proc() {
 	log.info("----------------------------------------")
 }
 
-step :: proc(cycles: uint, op186 := true) -> (res: Step, ok := true) {
+step :: proc(cycles: uint) -> (res: Step, ok := true) {
 	using peripheral.peripheral_manager
 
 	for res.cycles < cycles {
-		n, r, z, s := processor.step(op186)
+		n, r, z, s := processor.step()
 		if !s {
 			ok = s
 		}
