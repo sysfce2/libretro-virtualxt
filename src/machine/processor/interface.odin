@@ -29,6 +29,10 @@ get_registers :: proc() -> ^peripheral.Peripheral_CPU_Registers {
 	return &registers
 }
 
+flush_prefetch :: proc() {
+	state.flush = true
+}
+
 exec_cycles :: proc(#any_int cycles: uint = 1) {
 	state.ex_cycles += cycles
 }

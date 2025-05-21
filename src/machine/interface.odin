@@ -44,6 +44,7 @@ create :: proc() -> bool {
 	using peripheral
 
 	peripheral_interface.registers = processor.get_registers
+	peripheral_interface.flush_prefetch = processor.flush_prefetch
 	peripheral_interface.interrupt = interrupt
 	peripheral_interface.frequency = frequency
 	peripheral_interface.wait = processor.exec_cycles

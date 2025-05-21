@@ -82,15 +82,16 @@ Timer_Internal :: struct {
 }
 
 peripheral_interface: struct {
-	interrupt:  proc(num: uint),
-	registers:  proc() -> ^Peripheral_CPU_Registers,
-	frequency:  proc() -> uint,
-	wait:       proc(cycles: uint),
-	configure:  proc(id, key: string, value: any) -> bool,
-	read:       proc(addr: u32) -> byte,
-	write:      proc(addr: u32, data: byte),
-	read_port:  proc(port: u16) -> byte,
-	write_port: proc(port: u16, data: byte),
+	interrupt:      proc(num: uint),
+	registers:      proc() -> ^Peripheral_CPU_Registers,
+	flush_prefetch: proc(),
+	frequency:      proc() -> uint,
+	wait:           proc(cycles: uint),
+	configure:      proc(id, key: string, value: any) -> bool,
+	read:           proc(addr: u32) -> byte,
+	write:          proc(addr: u32, data: byte),
+	read_port:      proc(port: u16) -> byte,
+	write_port:     proc(port: u16, data: byte),
 }
 
 peripheral_manager: struct {

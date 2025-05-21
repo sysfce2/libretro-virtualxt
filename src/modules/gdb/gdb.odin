@@ -165,6 +165,8 @@ timer :: proc(using gdb: ^GDB, id: peripheral.Peripheral_Timer_ID, cycles: uint)
 		}
 
 		log.infof("Debug trap: %4.X:%4.X", cs, ip)
+
+		peripheral.peripheral_interface.flush_prefetch()
 		gdb_reg := &state.registers
 
 		gdb_reg[GDB_Register.REG_EAX] = c.uint(ax)

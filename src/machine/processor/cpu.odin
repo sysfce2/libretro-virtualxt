@@ -258,7 +258,7 @@ branch_relative_word :: proc(offset: i16) {
 @(private = "file")
 branch_near :: proc(ip: u16) {
 	registers.ip = ip
-	state.flush = true
+	flush_prefetch()
 }
 
 @(private = "file")
@@ -266,7 +266,7 @@ branch_far :: proc(seg, offset: u16) {
 	using registers
 	cs = seg
 	ip = offset
-	state.flush = true
+	flush_prefetch()
 }
 
 branch :: proc {
@@ -300,7 +300,7 @@ return_near :: proc(offset: u16, pop: u16 = 0) {
 	using registers
 	ip = offset
 	sp += pop
-	state.flush = true
+	flush_prefetch()
 }
 
 return_far :: proc(seg, offset: u16, pop: u16 = 0) {
