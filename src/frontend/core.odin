@@ -34,7 +34,7 @@ import retro_callbacks "vxt:frontend/libretro/callbacks"
 import "vxt:machine"
 import rt "vxt:xruntime"
 
-VXT_VERSION :: "2.0.0"
+VXT_VERSION :: "2.1.0"
 MAX_DISK_IMAGES :: 256
 LOG_BUFFER_SIZE :: 1024
 AUDIO_FREQUENCY :: 44100

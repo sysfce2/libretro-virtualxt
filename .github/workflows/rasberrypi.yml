@@ -9,7 +9,7 @@ on:
     workflow_dispatch:
 
 env:
-    VXT_VERSION: 2.0.0
+    VXT_VERSION: 2.1.0
     ODIN_VERSION: dev-2025-04
 
 jobs:
