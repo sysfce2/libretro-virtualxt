@@ -38,10 +38,11 @@ include:
   - project: 'libretro-infrastructure/ci-templates'
     file: '/ios-arm64.yml'
 
+  # Need a newer version of emscripten
   #################################### MISC ##################################
   # Emscripten
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/emscripten-static.yml'
+  #- project: 'libretro-infrastructure/ci-templates'
+  #  file: '/emscripten-static.yml'
 
 # Stages for building
 stages:
@@ -120,11 +121,10 @@ libretro-build-ios-arm64:
 
 #################################### MISC ##################################
 # Emscripten
-libretro-build-emscripten:
-  only:
-    # Need a newer version of emscripten for build 'edge'.
-    #- edge
-    - release
-  extends:
-    - .libretro-emscripten-static-retroarch-master
-    - .core-defs
+#libretro-build-emscripten:
+#  only:
+#    - edge
+#    - release
+#  extends:
+#    - .libretro-emscripten-static-retroarch-master
+#    - .core-defs
