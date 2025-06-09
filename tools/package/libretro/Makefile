@@ -75,20 +75,20 @@ else ifneq (,$(findstring android,$(platform)))
    fpic := -fPIC
    SHARED := -shared -Wl,--no-undefined
    TARGET_TRIPLE := unknown
+   ODIN_FLAGS += -subtarget:android
 
    ifeq ($(platform), android-arm)
       TARGET_TRIPLE = armv7a-linux-androideabi
-      ODIN_TARGET = freestanding_arm32
+      ODIN_TARGET = linux_arm32
    else ifeq ($(platform), android-arm64)
       TARGET_TRIPLE = aarch64-linux-android
-      ODIN_TARGET = freestanding_arm64
+      ODIN_TARGET = linux_arm64
    else ifeq ($(platform), android-x86)
       TARGET_TRIPLE = i686-linux-android
-      # Note: There are no freestanding i386 target atm. But I think this should work.
       ODIN_TARGET = linux_i386
    else ifeq ($(platform), android-x86_64)
       TARGET_TRIPLE = x86_64-linux-android
-      ODIN_TARGET = freestanding_amd64_sysv
+      ODIN_TARGET = linux_amd64
    endif
 
    CC = $(ANDROID_NDK_LLVM)/bin/$(TARGET_TRIPLE)21-clang
