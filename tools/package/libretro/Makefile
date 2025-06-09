@@ -75,7 +75,9 @@ else ifneq (,$(findstring android,$(platform)))
    fpic := -fPIC
    SHARED := -shared -Wl,--no-undefined
    TARGET_TRIPLE := unknown
+   
    ODIN_FLAGS += -subtarget:android
+   ODIN_ANDROID_NDK := $(ANDROID_NDK_LLVM)
 
    ifeq ($(platform), android-arm)
       TARGET_TRIPLE = armv7a-linux-androideabi
