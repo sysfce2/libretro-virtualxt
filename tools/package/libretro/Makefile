@@ -77,7 +77,7 @@ else ifneq (,$(findstring android,$(platform)))
    TARGET_TRIPLE := unknown
    
    ODIN_FLAGS += -subtarget:android
-   ODIN_ANDROID_NDK := $(ANDROID_NDK_ROOT)
+   ODIN_ANDROID_NDK = $(ANDROID_NDK_ROOT)
 
    ifeq ($(platform), android-arm)
       TARGET_TRIPLE = armv7a-linux-androideabi
