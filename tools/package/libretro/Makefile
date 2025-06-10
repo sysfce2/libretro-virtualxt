@@ -75,9 +75,7 @@ else ifneq (,$(findstring android,$(platform)))
    fpic := -fPIC
    SHARED := -shared -Wl,--no-undefined
    TARGET_TRIPLE := unknown
-   
    ODIN_FLAGS += -subtarget:android
-   ODIN_ANDROID_NDK = $(ANDROID_NDK_ROOT)
 
    ifeq ($(platform), android-arm)
       TARGET_TRIPLE = armv7a-linux-androideabi
@@ -192,7 +190,7 @@ setup:
 	curl -L -o odin.zip https://github.com/odin-lang/Odin/releases/download/$(ODIN_VERSION)/odin-$(system_odin)-$(ODIN_VERSION).zip && $(ODIN_UNPACK)
 
 $(OBJECTS): setup
-	PATH="$(PATH):$(MKPATH)/odin" ODIN_TARGET=$(ODIN_TARGET) ODIN_FLAGS="$(ODIN_FLAGS)" ODIN_VET= $(MAKE) -C $(CORE_DIR) $(ODIN_MKTARGET)
+	PATH="$(PATH):$(MKPATH)/odin" ODIN_ANDROID_NDK="$(ANDROID_NDK_ROOT)" ODIN_TARGET=$(ODIN_TARGET) ODIN_FLAGS="$(ODIN_FLAGS)" ODIN_VET= $(MAKE) -C $(CORE_DIR) $(ODIN_MKTARGET)
 
 $(TARGET): $(OBJECTS)
 ifneq ($(ODIN_MKTARGET),object)
