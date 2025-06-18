@@ -38,10 +38,16 @@ VXT_VERSION :: "2.1.0"
 MAX_DISK_IMAGES :: 256
 LOG_BUFFER_SIZE :: 1024
 AUDIO_FREQUENCY :: 44100
-DEFAULT_DISK_IMAGE :: "boot:freedos_hd.img"
+DEFAULT_DISK_IMAGE :: "boot:" + #config(VXT_DEFAULT_DISK_IMAGE, "freedos_hd.img")
 
-@(thread_local)
-log_buffer: [LOG_BUFFER_SIZE]byte
+// This is an issue on RaspberryPi baremetal targets.
+// Just don't make this thread safe for now.
+when #config(VXT_EXTERNAL_HEAP, false) {
+	log_buffer: [LOG_BUFFER_SIZE]byte
+} else {
+	@(thread_local)
+	log_buffer: [LOG_BUFFER_SIZE]byte
+}
 
 delta_time: retro.usec_t
 current_time: time.Duration

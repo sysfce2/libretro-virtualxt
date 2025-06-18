@@ -106,13 +106,13 @@ extern "C" {
 					m |= FA_WRITE;
 				if (mode & RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING)
 					m |= FA_OPEN_EXISTING;
-				
+
 				if (f_open(handle, path, m) != FR_OK) {
 					memset(handle, 0, sizeof(FIL));
 					return 0;
 				}
+				return (struct retro_vfs_file_handle*)i;
 			}
-			return (struct retro_vfs_file_handle*)i;
 		}
 		return 0;		
 	}
@@ -281,9 +281,10 @@ TShutdownMode CKernel::Run(void) {
 	retro_set_environment(&retro_environment);
 
 	LOGI("retro_load_game");
-	struct retro_game_info game_info = { "C.img", 0	};
+	struct retro_game_info game_info = { "machine.ini", 0 };
 	retro_load_game(&game_info);
 
+	LOGI("retro_set_input_poll");
 	retro_set_input_poll(&input_poll);
 	
 	InitializeAudio();

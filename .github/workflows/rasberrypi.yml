@@ -10,6 +10,7 @@ on:
 
 env:
     VXT_VERSION: 2.1.0
+    DISK_IMAGE: freedos_hd.img
     ODIN_VERSION: dev-2025-06
 
 jobs:
@@ -94,6 +95,15 @@ jobs:
                   make -C "${CIRCLEHOME}/addon/SDCard"
                   make -C "${GITHUB_WORKSPACE}" clean rasberrypi
                   cp "${GITHUB_WORKSPACE}/tools/circle/kernel/kernel_2712.img" "${GITHUB_WORKSPACE}/package"
+
+            - name: Content
+              run: |
+                  cp "${GITHUB_WORKSPACE}/boot/${DISK_IMAGE}" "${GITHUB_WORKSPACE}/package/C.img"
+                  cp "${GITHUB_WORKSPACE}/tools/config/raspberrypi.ini" "${GITHUB_WORKSPACE}/package/machine.ini"
+                  cp "${GITHUB_WORKSPACE}/bios/GLABIOS.ROM" "${GITHUB_WORKSPACE}/package"
+                  cp "${GITHUB_WORKSPACE}/bios/pcxtbios.bin" "${GITHUB_WORKSPACE}/package"
+                  cp "${GITHUB_WORKSPACE}/bios/vxtx.bin" "${GITHUB_WORKSPACE}/package"
+                  cp "${GITHUB_WORKSPACE}/bios/vgabios.bin" "${GITHUB_WORKSPACE}/package"
 
             - name: Deploy
               env:

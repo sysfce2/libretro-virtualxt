@@ -196,15 +196,16 @@ mount_disk :: proc(disk: ^Disk, disk_num: byte, path: string) {
 		disk.num_fd += 1
 	}
 
+	log.infof("%s image mounted: %s", is_hd ? "HD" : "FD", path)
+	log.infof("  Index: 0x%2.X", num)
+	log.infof("  Size: %d", size)
+	log.infof("  CSH: %d, %d, %d", cylinders, sectors, heads)
+
 	assert(disk.num_fd <= 2)
 	assert(disk.drives[num].fp == nil)
 
 	assert((size % SECTOR_SIZE) == 0)
 	assert((is_hd && num >= 0x80) || (!is_hd && num < 0x80))
-
-	log.infof("%s image mounted: %s", is_hd ? "HD" : "FD", path)
-	log.infof("  Index: 0x%2.X", num)
-	log.infof("  CSH: %d, %d, %d", cylinders, sectors, heads)
 
 	disk.drives[num] = drive
 }
