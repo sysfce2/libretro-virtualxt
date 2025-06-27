@@ -27,6 +27,7 @@ package modules
 @(require) import "modules:ems"
 @(require) import "modules:ethernet"
 @(require) import "modules:gdb"
+@(require) import "modules:joystick"
 @(require) import "modules:mouse"
 @(require) import "modules:rifs2"
 @(require) import "modules:rom"

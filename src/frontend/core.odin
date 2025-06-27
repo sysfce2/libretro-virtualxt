@@ -379,6 +379,7 @@ setup_default_machine :: proc(info: ^retro.game_info) {
 	}
 
 	instantiate("mouse")
+	//instantiate("joystick")
 	//instantiate("ethernet")
 
 	instantiate("chipset")
