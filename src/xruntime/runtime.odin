@@ -52,25 +52,28 @@ init :: proc() {
 		core_heap = heap_memory.buffer[:]
 	}
 
-	mem.buddy_allocator_init(&core_allocator, core_heap, mem.DEFAULT_ALIGNMENT)
-	context.allocator = mem.buddy_allocator(&core_allocator)
-	context.allocator.procedure =
-	proc(
-		allocator_data: rawptr,
-		mode: runtime.Allocator_Mode,
-		size, alignment: int,
-		old_memory: rawptr,
-		old_size: int,
-		location: runtime.Source_Code_Location = #caller_location,
-	) -> (
-		[]byte,
-		runtime.Allocator_Error,
-	) {
-		ptr, err := mem.buddy_allocator_proc(allocator_data, mode, size, alignment, old_memory, old_size, location)
-		if err == .Out_Of_Memory {
-			panic("Buddy allocator out of memory!")
+	// TODO: Not sure what this is about? NetBSD bug?
+	when ODIN_OS != .NetBSD {
+		mem.buddy_allocator_init(&core_allocator, core_heap, mem.DEFAULT_ALIGNMENT)
+		context.allocator = mem.buddy_allocator(&core_allocator)
+		context.allocator.procedure =
+		proc(
+			allocator_data: rawptr,
+			mode: runtime.Allocator_Mode,
+			size, alignment: int,
+			old_memory: rawptr,
+			old_size: int,
+			location: runtime.Source_Code_Location = #caller_location,
+		) -> (
+			[]byte,
+			runtime.Allocator_Error,
+		) {
+			ptr, err := mem.buddy_allocator_proc(allocator_data, mode, size, alignment, old_memory, old_size, location)
+			if err == .Out_Of_Memory {
+				panic("Buddy allocator out of memory!")
+			}
+			return ptr, err
 		}
-		return ptr, err
 	}
 
 	mem.arena_init(&core_temp_allocator, make([]byte, 1024 * 1024 * 4)) // 4MB
