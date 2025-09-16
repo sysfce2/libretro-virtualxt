@@ -29,6 +29,7 @@ import "core:slice"
 import retro "vxt:frontend/libretro"
 import retro_callbacks "vxt:frontend/libretro/callbacks"
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 MAX_BUFFER_SIZE :: 8 * 3
 
@@ -138,7 +139,8 @@ push_data :: proc(mouse: ^Mouse, data: byte) {
 }
 
 @(init)
-mouse :: proc() {
+mouse :: proc "contextless" () {
+	context = rt.default_context
 	peripheral.register_constructor(proc(_: string) {
 		mouse, cb := peripheral.allocate(Mouse)
 		mouse.base_port = 0x3F8

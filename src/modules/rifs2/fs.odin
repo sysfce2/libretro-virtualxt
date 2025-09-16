@@ -31,6 +31,7 @@ import "core:slice"
 import "core:strings"
 
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 import retro "vxt:frontend/libretro"
 import retro_callbacks "vxt:frontend/libretro/callbacks"
@@ -540,7 +541,8 @@ io_out :: proc(using fs: ^FS, port: u16, data: byte) {
 }
 
 @(init)
-rifs2 :: proc() {
+rifs2 :: proc "contextless" () {
+	context = rt.default_context
 	peripheral.register_constructor(proc(_: string) {
 		fs, cb := peripheral.allocate(FS)
 		fs.base_port = 0x178

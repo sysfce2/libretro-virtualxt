@@ -31,6 +31,7 @@ import "core:strings"
 import retro "vxt:frontend/libretro"
 import retro_callbacks "vxt:frontend/libretro/callbacks"
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 ROM :: struct {
 	id, name: string,
@@ -123,7 +124,8 @@ destroy :: proc(rom: ^ROM) {
 }
 
 @(init)
-rom :: proc() {
+rom :: proc "contextless" () {
+	context = rt.default_context
 	peripheral.register_constructor(proc(id: string) {
 		rom, cb := peripheral.allocate(ROM)
 		rom.id = id

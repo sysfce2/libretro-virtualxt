@@ -30,6 +30,7 @@ import "core:time/datetime"
 import "core:time/timezone"
 
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 CMOS_SIZE :: 64
 
@@ -151,7 +152,8 @@ io_out :: proc(using rtc: ^RTC, port: u16, data: byte) {
 }
 
 @(init)
-rtc :: proc() {
+rtc :: proc "contextless" () {
+	context = rt.default_context
 	peripheral.register_constructor(proc(_: string) {
 		rtc, cb := peripheral.allocate(RTC)
 		rtc.io_base = 0x240

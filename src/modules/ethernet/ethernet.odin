@@ -27,6 +27,7 @@ import "core:bytes"
 import "core:log"
 
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 MAX_PACKET_SIZE :: 0xFFF0
 POLL_DELAY :: 1000 // Poll every millisecond.
@@ -224,7 +225,8 @@ timer :: proc(using eth: ^Ethernet, id: peripheral.Peripheral_Timer_ID, cycles: 
 }
 
 @(init)
-ethernet :: proc() {
+ethernet :: proc "contextless" () {
+	context = rt.default_context
 	peripheral.register_constructor(proc(_: string) {
 		_, cb := peripheral.allocate(Ethernet)
 

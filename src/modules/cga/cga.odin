@@ -26,6 +26,7 @@ package cga
 import "core:math/rand"
 
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 MEMORY_SIZE :: 0x10000
 MEMORY_BASE :: 0xB8000
@@ -211,7 +212,8 @@ reset :: proc(using cga: ^CGA) -> bool {
 }
 
 @(init)
-cga :: proc() {
+cga :: proc "contextless" () {
+	context = rt.default_context
 	peripheral.register_constructor(proc(_: string) {
 		cga, cb := peripheral.allocate(CGA)
 		_ = rand.read(cga.mem[:])

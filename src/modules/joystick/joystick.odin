@@ -28,6 +28,7 @@ import "core:math/bits"
 import retro "vxt:frontend/libretro"
 import retro_callbacks "vxt:frontend/libretro/callbacks"
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 Stick :: struct {
 	axis:     [2]i16,
@@ -122,7 +123,8 @@ timer :: proc(using joystick: ^Joystick, id: peripheral.Peripheral_Timer_ID, cyc
 }
 
 @(init)
-joystick :: proc() {
+joystick :: proc "contextless" () {
+	context = rt.default_context
 	peripheral.register_constructor(proc(_: string) {
 		_, cb := peripheral.allocate(Joystick)
 

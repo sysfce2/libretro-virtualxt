@@ -32,6 +32,7 @@ import "core:strconv"
 import "core:time"
 
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 when #config(VXT_GDBSTUB, false) {
 	foreign import gdbstub "gdbstub.a"
@@ -273,7 +274,8 @@ gdb_sys_remove :: proc "c" (state: ^GDB_State, ty: c.uint, addr: c.uint, kind: c
 }
 
 @(init)
-gdb :: proc() {
+gdb :: proc "contextless" () {
+	context = rt.default_context
 	peripheral.register_constructor(proc(_: string) {
 		when #config(VXT_GDBSTUB, false) {
 			gdb, cb := peripheral.allocate(GDB)

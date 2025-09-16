@@ -22,9 +22,12 @@
 package chipset
 
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 @(init)
-chipset :: proc() {
+chipset :: proc "contextless" () {
+	context = rt.default_context
+
 	peripheral.register_constructor(proc(_: string) {
 		_, cb := peripheral.allocate(PIT)
 		cb.class = .PIT

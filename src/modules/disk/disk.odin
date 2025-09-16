@@ -30,6 +30,7 @@ import "core:strings"
 import retro "vxt:frontend/libretro"
 import retro_callbacks "vxt:frontend/libretro/callbacks"
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 BOOTSECTOR_ADDRESS :: 0x7C00
 SECTOR_SIZE :: 512
@@ -334,7 +335,8 @@ io_out :: proc(disk: ^Disk, port: u16, _: byte) {
 }
 
 @(init)
-disk :: proc() {
+disk :: proc "contextless" () {
+	context = rt.default_context
 	peripheral.register_constructor(proc(_: string) {
 		_, cb := peripheral.allocate(Disk)
 

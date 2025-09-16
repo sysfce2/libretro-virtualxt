@@ -27,6 +27,7 @@ import "core:log"
 import "core:math/rand"
 
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 PLANE_SIZE :: 0x10000
 MEMORY_SIZE :: 0x40000
@@ -445,7 +446,8 @@ reset :: proc(vga: ^VGA) -> bool {
 }
 
 @(init)
-vga :: proc() {
+vga :: proc "contextless" () {
+	context = rt.default_context
 	peripheral.register_constructor(proc(_: string) {
 		vga, cb := peripheral.allocate(VGA)
 		_ = rand.read(vga.mem[:])

@@ -44,7 +44,9 @@ odin_startup_runtime :: proc "c" (heap: rawptr, size: c.int) {
 }
 
 @(init)
-init :: proc() {
+init :: proc "contextless" () {
+	context = default_context
+
 	when !#config(VXT_EXTERNAL_HEAP, false) {
 		@(static) heap_memory: struct #align (size_of(mem.Buddy_Block)) {
 			buffer: [1024 * 1024 * #config(VXT_MAX_MEMORY_MB, 32)]byte, // 32MB ought be enough for everyone?
@@ -56,8 +58,7 @@ init :: proc() {
 	when ODIN_OS != .NetBSD {
 		mem.buddy_allocator_init(&core_allocator, core_heap, mem.DEFAULT_ALIGNMENT)
 		context.allocator = mem.buddy_allocator(&core_allocator)
-		context.allocator.procedure =
-		proc(
+		context.allocator.procedure = proc(
 			allocator_data: rawptr,
 			mode: runtime.Allocator_Mode,
 			size, alignment: int,
@@ -78,8 +79,7 @@ init :: proc() {
 
 	mem.arena_init(&core_temp_allocator, make([]byte, 1024 * 1024 * 4)) // 4MB
 	context.temp_allocator = mem.arena_allocator(&core_temp_allocator)
-	context.temp_allocator.procedure =
-	proc(
+	context.temp_allocator.procedure = proc(
 		allocator_data: rawptr,
 		mode: runtime.Allocator_Mode,
 		size, alignment: int,
@@ -103,8 +103,12 @@ init :: proc() {
 		default_context.random_generator = runtime.Random_Generator {
 			procedure = random_generator_proc,
 		}
-		default_context.assertion_failure_proc =
-		proc(prefix, message: string, loc: runtime.Source_Code_Location) -> ! {log.panicf("%v %s: %s", loc, prefix, message)}
+		default_context.assertion_failure_proc = proc(prefix, message: string, loc: runtime.Source_Code_Location) -> ! {log.panicf(
+				"%v %s: %s",
+				loc,
+				prefix,
+				message,
+			)}
 	}
 }
 

@@ -10,7 +10,7 @@ on:
 
 env:
     VXT_VERSION: 2.1.0
-    ODIN_VERSION: dev-2025-06
+    ODIN_VERSION: dev-2025-09
     NDK_VERSION: r27c
 
 jobs:

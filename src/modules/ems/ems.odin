@@ -27,6 +27,7 @@ import "core:log"
 import "core:math/rand"
 
 import "vxt:machine/peripheral"
+import rt "vxt:xruntime"
 
 // The Lo-tech EMS board driver is hardcoded to 2MB.
 MEMORY_SIZE :: 0x200000
@@ -90,7 +91,8 @@ io_out :: proc(ems: ^EMS, port: u16, data: byte) {
 }
 
 @(init)
-ems :: proc() {
+ems :: proc "contextless" () {
+	context = rt.default_context
 	peripheral.register_constructor(proc(_: string) {
 		ems, cb := peripheral.allocate(EMS)
 
