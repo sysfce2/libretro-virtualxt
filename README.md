@@ -1,3 +1,6 @@
+> [!WARNING]
+> This project has moved to [Codeberg](https://codeberg.org/virtualxt)
+
 # VirtualXT
 
 [![Build](https://github.com/virtualxt/virtualxt/actions/workflows/libretro.yml/badge.svg)](https://github.com/virtualxt/virtualxt/actions/workflows/sdl2.yml)
